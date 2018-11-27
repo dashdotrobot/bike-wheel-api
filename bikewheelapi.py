@@ -30,6 +30,7 @@ def get_deformation():
     except Exception as e:
         raise e
 
+    # What values of theta to calculate deflection at
     if 'theta_range' in request.json['result']:
         if len(request.json['result']['theta_range']) == 2:
             theta_range = (request.json['result']['theta_range'][0],
@@ -79,16 +80,38 @@ def get_tensions():
         raise e
 
     # Which spokes to return results for
+    if 'spokes_range' in request.json['result']:
+        if len(request.json['result']['spoke_range']) == 2:
+            spokes_range = (request.json['result']['spoke_range'][0],
+                            request.json['result']['spoke_range'][1],
+                            1)
+        else:
+            spokes_range = request.json['result']['spoke_range']
 
+        spokes = range(int(theta_range[0]),
+                       int(theta_range[1]),
+                       int(theta_range[2]))
+    elif 'spokes' in request.json['result']:
+        spokes = np.atleast_1d(np.array(request.json['result']['spokes']))
+    else:
+        spokes = list(range(len(wheel.spokes)))  # Default: all spokes
 
     # Calculate spoke tensions
-    dT = [-s.EA/s.length *
-          np.dot(s.n, mm.B_theta(s.rim_pt[1], comps=[0, 1, 2]).dot(dm))
-         for s in wheel.spokes]
+    dT = [-wheel.spokes[s].EA/wheel.spokes[s].length *
+          np.dot(wheel.spokes[s].n,
+                 mm.B_theta(wheel.spokes[s].rim_pt[1], comps=[0, 1, 2]).dot(dm))
+          for s in spokes]
 
+    tension = [wheel.spokes[s].tension + dt for s, dt in zip(spokes, dT)]
+
+    result = {'result': {
+        'spokes': spokes,
+        'tension': tension,
+        'd_tension': dT
+    }}
 
     # Not implemented
-    return make_response('', 501)
+    return jsonify(result), 200
 
 @app.route('/stiffness', methods=['POST'])
 def get_stiffness():
@@ -174,6 +197,8 @@ def wheel_from_json(json):
                      density=float(json['spokes'].get('density', 0.)),
                      offset=float(json['spokes'].get('offset', 0.)))
 
+        w.apply_tension(T_right=float(json['spokes'].get('tension', 0.)))
+
     elif 'spokes_ds' in json and 'spokes_nds' in json:
         w.lace_cross_ds(n_spokes=int(json['spokes_ds']['num']),
                         n_cross=int(json['spokes_ds']['num_cross']),
@@ -188,6 +213,9 @@ def wheel_from_json(json):
                          young_mod=float(json['spokes_nds']['young_mod']),
                          density=float(json['spokes_nds'].get('density', 0.)),
                          offset=float(json['spokes_nds'].get('offset', 0.)))
+
+        w.apply_tension(T_right=float(json['spokes_ds'].get('tension', 0.)))
+
     else:
         raise KeyError('Missing or invalid spokes definition in POST JSON')
 

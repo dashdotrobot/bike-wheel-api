@@ -78,3 +78,18 @@ def test_deformation_range(client):
     assert response.status_code == 200
 
     assert len(response.json['result']['def_rad']) == 10
+
+def test_tensions_single(client):
+    data = {'forces': [{'location': 0., 'magnitude': [0., 1., 0., 0.]}]}
+    data.update({'result': {}})
+    data.update(wheel_dict)
+    data['spokes']['tension'] = 1000.
+
+    response = client.post('/tensions', json=data)
+
+    print(response.json['result'])
+
+    assert response.status_code == 200
+
+    assert False
+
