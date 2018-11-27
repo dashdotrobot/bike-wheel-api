@@ -1,20 +1,8 @@
 import pytest
+import numpy as np
 from bikewheelapi import app
 
-@pytest.fixture
-def client(request):
-    test_client = app.test_client()
-
-    return test_client
-
-
-def test_hello_world(client):
-    response = client.get('/')
-    assert b'Hello World' in response.data
-
-def test_make_wheel(client):
-
-    post_dict = {
+wheel_dict = {
         'hub': {
             'diameter': 0.05,
             'width_nds': 0.025,
@@ -39,6 +27,26 @@ def test_make_wheel(client):
             'density': 8000.,
             'offset': 0.}}
 
-    response = client.post('/makewheel', json=post_dict)
+@pytest.fixture
+def client(request):
+    test_client = app.test_client()
 
-    assert False
+    return test_client
+
+
+def test_hello_world(client):
+    response = client.get('/')
+    assert b'Hello World' in response.data
+
+def test_stiffness(client):
+
+    response = client.post('/stiffness', json=wheel_dict)
+
+    assert np.allclose(response.json['lateral_stiffness'],
+                       94150.65602356319)
+
+    assert np.allclose(response.json['radial_stiffness'],
+                       4255534.38869831)
+
+    assert np.allclose(response.json['torsional_stiffness'],
+                       108891.17398367148)

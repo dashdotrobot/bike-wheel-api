@@ -1,5 +1,5 @@
 from flask import Flask, jsonify, make_response, request
-from bikewheelcalc import BicycleWheel, Hub, Rim
+from bikewheelcalc import *
 
 
 app = Flask(__name__)
@@ -27,14 +27,20 @@ def get_tensions():
     # Not implemented
     return make_response('', 501)
 
-@app.route('/makewheel', methods=['POST'])
-def make_wheel():
-    'TESTING PURPOSES: Create a wheel from POST data'
+@app.route('/stiffness', methods=['POST'])
+def get_stiffness():
+    'Return stiffness properties of a wheel'
 
     # Build wheel from POST data
     w = wheel_from_json(request.json)
 
-    return make_response('', 501)
+    K_rad = calc_rad_stiff(w)
+    K_lat = calc_lat_stiff(w)
+    K_tor = calc_tor_stiff(w)
+
+    return jsonify({'radial_stiffness': K_rad,
+                    'lateral_stiffness': K_lat,
+                    'torsional_stiffness': K_tor}), 200
 
 
 # ---------------------------------- MODEL --------------------------------- #
@@ -52,7 +58,7 @@ def validate(json, key, key_type=float):
             elif key_type == str:
                 return str(json[key])
         except:
-            raise TypeError('Invalid value for parameter {:s}'
+            raise TypeError("Invalid value for parameter '{:s}'"
                             .format(key))
 
     else:
