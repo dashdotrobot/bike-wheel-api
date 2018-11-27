@@ -1,6 +1,7 @@
 import pytest
 import numpy as np
 from bikewheelapi import app
+import matplotlib.pyplot as plt
 
 wheel_dict = {
         'hub': {
@@ -52,13 +53,28 @@ def test_stiffness(client):
     assert np.allclose(response.json['torsional_stiffness'],
                        108891.17398367148)
 
-def test_deformation(client):
+def test_deformation_single(client):
 
-    data = {'forces': [{'location': 0., 'magnitude': [0., 1., 0., 0.]},
-                       {'location': np.pi, 'f_lat': 1.}]}
-
+    data = {'forces': [{'location': 0., 'magnitude': [0., 1., 0., 0.]}]}
+    data.update({'result': {'theta': 0.}})
     data.update(wheel_dict)
 
     response = client.post('/deform', json=data)
 
     assert response.status_code == 200
+
+    assert np.allclose(response.json['result']['def_rad'][0],
+                       1. / 4255534.38869831)
+
+def test_deformation_range(client):
+
+    data = {'forces': [{'location': 0., 'magnitude': [0., 1., 0., 0.]},
+                       {'location': np.pi, 'f_lat': 1.}]}
+    data.update({'result': {'theta_range': [0., np.pi, 10]}})
+    data.update(wheel_dict)
+
+    response = client.post('/deform', json=data)
+
+    assert response.status_code == 200
+
+    assert len(response.json['result']['def_rad']) == 10
