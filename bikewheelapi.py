@@ -32,7 +32,7 @@ def make_wheel():
     'TESTING PURPOSES: Create a wheel from POST data'
 
     # Build wheel from POST data
-    wheel_from_json(request.json)
+    w = wheel_from_json(request.json)
 
     return make_response('', 501)
 
@@ -60,8 +60,6 @@ def validate(json, key, key_type=float):
 def wheel_from_json(json):
     'Create a BicycleWheel object from JSON'
 
-    print(json['hub'])
-
     w = BicycleWheel
 
     # Hub
@@ -71,5 +69,30 @@ def wheel_from_json(json):
                     width_ds=validate(json['hub'], 'width_ds'))
     else:
         raise KeyError('Hub definition not found in POST JSON')
+
+    # Rim
+    if 'rim' in json:
+        radius = validate(json['rim'], 'radius')
+        young_mod = validate(json['rim'], 'young_mod')
+        shear_mod = validate(json['rim'], 'shear_mod')
+        density = validate(json['rim'], 'density')
+
+        if json['rim']['section_type'] == 'general':
+            area = validate(json['rim']['section_params'], 'area')
+            I_rad = validate(json['rim']['section_params'], 'I_rad')
+            I_lat = validate(json['rim']['section_params'], 'I_lat')
+            J_tor = validate(json['rim']['section_params'], 'J_tor')
+            I_warp = validate(json['rim']['section_params'], 'I_warp')
+        else:
+            raise TypeError("Invalid rim section type '{:s}'"
+                            .format(json['rim']['section_type']))
+
+        w.rim = Rim(radius=radius, area=area,
+                    I_rad=I_rad, I_lat=I_lat, J_tor=J_tor, I_warp=I_warp,
+                    young_mod=young_mod, shear_mod=shear_mod, density=density)
+
+
+    else:
+        raise KeyError('Rim definition not found in POST JSON')
 
     return w
