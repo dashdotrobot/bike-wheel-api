@@ -17,10 +17,24 @@ def hello():
 def get_deformation():
     'Return the deformation of a wheel under a set of loads'
 
+    wheel = wheel_from_json(request.json)
+    mm = ModeMatrix(wheel, N=24)
+    F_ext = F_ext_from_json(request.json, mm)
+
+    K = (mm.K_rim(tension=True, r0=True) +
+         mm.K_spk(tension=True, smeared_spokes=False))
+
+    try:
+        dm = np.linalg.solve(K, F_ext)
+    except Exception as e:
+        raise e
+
+    print(dm)
+
     # Not implemented
     return make_response('', 501)
 
-@app.route('/tensions')
+@app.route('/tensions', methods=['POST'])
 def get_tensions():
     'Return the spoke tensions of a wheel under a set of loads'
 
@@ -64,6 +78,29 @@ def validate(json, key, key_type=float):
     else:
         raise KeyError("Parameter '{:s}' not found in POST JSON"
                        .format(key))
+
+def F_ext_from_json(json, mode_matrix):
+    'Calculate modal force vector from JSON'
+
+    # Start with empty force vector
+    F_ext = mode_matrix.F_ext(f_theta=0., f=[0., 0., 0., 0.])
+
+    if 'forces' in json:
+        for f in json['forces']:
+            if 'magnitude' in f:
+
+                mag = np.array(f['magnitude'])
+                if len(mag) < 4:
+                    mag = np.pad(mag, (0, 4 - len(mag)))
+            else:
+                fc = {'f_rad': 0., 'f_lat': 0., 'f_tan': 0., 'm_tor': 0.}
+                fc.update(f)
+
+                mag = np.array([fc['f_lat'], fc['f_rad'], fc['f_tan'], fc['m_tor']])
+
+            F_ext = F_ext + mode_matrix.F_ext(f_theta=f['location'], f=mag)
+
+    return F_ext
 
 def wheel_from_json(json):
     'Create a BicycleWheel object from JSON'

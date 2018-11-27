@@ -25,7 +25,8 @@ wheel_dict = {
             'diameter': 1.8e-3,
             'young_mod': 210e9,
             'density': 8000.,
-            'offset': 0.}}
+            'offset': 0.,
+            'tension': 0.}}
 
 @pytest.fixture
 def client(request):
@@ -50,3 +51,14 @@ def test_stiffness(client):
 
     assert np.allclose(response.json['torsional_stiffness'],
                        108891.17398367148)
+
+def test_deformation(client):
+
+    data = {'forces': [{'location': 0., 'magnitude': [0., 1., 0., 0.]},
+                       {'location': np.pi, 'f_lat': 1.}]}
+
+    data.update(wheel_dict)
+
+    response = client.post('/deform', json=data)
+
+    assert False
