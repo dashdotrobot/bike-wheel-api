@@ -61,4 +61,4 @@ def test_deformation(client):
 
     response = client.post('/deform', json=data)
 
-    assert False
+    assert response.status_code == 200
