@@ -88,11 +88,11 @@ def get_tensions():
         else:
             spokes_range = request.json['result']['spoke_range']
 
-        spokes = range(int(theta_range[0]),
-                       int(theta_range[1]),
-                       int(theta_range[2]))
+        spokes = list(range(int(theta_range[0]),
+                            int(theta_range[1]),
+                            int(theta_range[2])))
     elif 'spokes' in request.json['result']:
-        spokes = np.atleast_1d(np.array(request.json['result']['spokes']))
+        spokes = np.atleast_1d(np.array(request.json['result']['spokes'])).tolist()
     else:
         spokes = list(range(len(wheel.spokes)))  # Default: all spokes
 
