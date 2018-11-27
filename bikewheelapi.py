@@ -30,7 +30,21 @@ def get_deformation():
     except Exception as e:
         raise e
 
-    theta = theta_from_json(request.json)
+    if 'theta_range' in request.json['result']:
+        if len(request.json['result']['theta_range']) == 2:
+            theta_range = (request.json['result']['theta_range'][0],
+                           request.json['result']['theta_range'][1],
+                           100)
+        else:
+            theta_range = request.json['result']['theta_range']
+
+        theta = np.linspace(float(theta_range[0]),
+                            float(theta_range[1]),
+                            int(theta_range[2]))
+    elif 'theta' in request.json['result']:
+        theta = np.array(request.json['result']['theta'])
+    else:
+        theta = np.linspace(0., 2*np.pi, 50)  # Default range
 
     Bu = mm.B_theta(theta=theta, comps=0)
     Bv = mm.B_theta(theta=theta, comps=1)
@@ -64,10 +78,14 @@ def get_tensions():
     except Exception as e:
         raise e
 
+    # Which spokes to return results for
+
+
     # Calculate spoke tensions
     dT = [-s.EA/s.length *
           np.dot(s.n, mm.B_theta(s.rim_pt[1], comps=[0, 1, 2]).dot(dm))
          for s in wheel.spokes]
+
 
     # Not implemented
     return make_response('', 501)
@@ -91,25 +109,6 @@ def get_stiffness():
 # --------------------------------- HELPERS -------------------------------- #
 # Define functions to calculate wheel results                                #
 # -------------------------------------------------------------------------- #
-
-def theta_from_json(json):
-    'Parse POST data to get desired locations'
-
-    if 'theta_range' in json['result']:
-        if len(json['result']['theta_range']) == 2:
-            theta_range = (json['result']['theta_range'][0],
-                           json['result']['theta_range'][1],
-                           100)
-        else:
-            theta_range = json['result']['theta_range']
-
-        return np.linspace(float(theta_range[0]),
-                           float(theta_range[1]),
-                           int(theta_range[2]))
-    elif 'theta' in json['result']:
-        return np.array(json['result']['theta'])
-    else:
-        return  np.linspace(0., 2*np.pi, 50)  # Default range
 
 def F_ext_from_json(json, mode_matrix):
     'Calculate modal force vector from JSON'
