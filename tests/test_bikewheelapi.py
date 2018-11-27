@@ -30,7 +30,14 @@ def test_make_wheel(client):
                 'I_rad': 100 / 69e9,
                 'I_lat': 200 / 69e9,
                 'J_tor': 25 / 26e9,
-                'I_warp': 0.}}}
+                'I_warp': 0.}},
+        'spokes': {
+            'num': 36,
+            'num_cross': 3,
+            'diameter': 1.8e-3,
+            'young_mod': 210e9,
+            'density': 8000.,
+            'offset': 0.}}
 
     response = client.post('/makewheel', json=post_dict)
 
