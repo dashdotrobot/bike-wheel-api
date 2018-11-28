@@ -75,36 +75,44 @@ def test_stiffness_singular(client, wheel_dict):
 
 def test_deformation_single(client, wheel_dict):
 
-    data = {'forces': [{'location': 0., 'magnitude': [0., 1., 0., 0.]}]}
-    data.update({'result': {'theta': 0.}})
-    data.update(wheel_dict)
+    post = wheel_dict
+    post['deformation'] = {
+        'forces': [{'location': 0., 'magnitude': [0., 1., 0., 0.]}],
+        'theta': 0.
+    }
 
-    response = client.post('/deform', json=data)
+    response = client.post('/calculate', json=post)
+
+    print(response.json)
 
     assert response.status_code == 200
-
-    assert np.allclose(response.json['result']['def_rad'][0],
+    assert response.json['deformation']['success'] == True
+    assert np.allclose(response.json['deformation']['def_rad'][0],
                        1. / 4255534.38869831)
 
 def test_deformation_range(client, wheel_dict):
 
-    data = {'forces': [{'location': 0., 'magnitude': [0., 1., 0., 0.]},
-                       {'location': np.pi, 'f_lat': 1.}]}
-    data.update({'result': {'theta_range': [0., np.pi, 10]}})
-    data.update(wheel_dict)
+    post = wheel_dict
 
-    response = client.post('/deform', json=data)
+    post['deformation'] = {
+        'forces': [{'location': 0., 'magnitude': [0., 1., 0., 0.]},
+                   {'location': np.pi, 'f_lat': 1.}],
+        'theta_range': [0., np.pi, 10]}
+
+    response = client.post('/calculate', json=post)
 
     assert response.status_code == 200
-
-    assert len(response.json['result']['def_rad']) == 10
+    assert response.json['deformation']['success'] == True
+    assert len(response.json['deformation']['def_rad']) == 10
 
 def test_tensions_single_spoke(client, wheel_dict):
     'Get tension results for a single spoke'
 
     post = dict(wheel_dict)
-    post['tension'] = {'forces': [{'location': 0., 'magnitude': [0., 1., 0., 0.]}],
-                       'spokes': [0]}
+    post['tension'] = {
+        'forces': [{'location': 0., 'magnitude': [0., 1., 0., 0.]}],
+        'spokes': [0]
+    }
 
     response = client.post('/calculate', json=post)
 
@@ -112,12 +120,15 @@ def test_tensions_single_spoke(client, wheel_dict):
     assert response.json['tension']['success'] == True
     assert len(response.json['tension']['tension']) == 1
     assert len(response.json['tension']['d_tension']) == 1
+    assert response.json['tension']['d_tension'][0] < 0
 
 def test_tensions_all_spokes(client, wheel_dict):
     'Get tension results for all spokes (default)'
 
     post = dict(wheel_dict)
-    post['tension'] = {'forces': [{'location': 0., 'magnitude': [0., 1., 0., 0.]}]}
+    post['tension'] = {
+        'forces': [{'location': 0., 'magnitude': [0., 1., 0., 0.]}]
+    }
 
     response = client.post('/calculate', json=post)
 

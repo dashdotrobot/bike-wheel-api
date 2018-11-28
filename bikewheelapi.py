@@ -17,55 +17,6 @@ CORS(app)
 def hello():
     return 'Hello World', 200
 
-# @app.route('/deform', methods=['POST'])
-def get_deformation():
-    'Return the deformation of a wheel under a set of loads'
-
-    wheel = wheel_from_json(request.json)
-    mm = ModeMatrix(wheel, N=24)
-    F_ext = F_ext_from_json(request.json, mm)
-
-    K = (mm.K_rim(tension=True, r0=True) +
-         mm.K_spk(tension=True, smeared_spokes=False))
-
-    # Solve for modal deformation vector
-    try:
-        dm = np.linalg.solve(K, F_ext)
-    except Exception as e:
-        raise e
-
-    # What values of theta to calculate deflection at
-    if 'theta_range' in request.json['result']:
-        if len(request.json['result']['theta_range']) == 2:
-            theta_range = (request.json['result']['theta_range'][0],
-                           request.json['result']['theta_range'][1],
-                           100)
-        else:
-            theta_range = request.json['result']['theta_range']
-
-        theta = np.linspace(float(theta_range[0]),
-                            float(theta_range[1]),
-                            int(theta_range[2]))
-    elif 'theta' in request.json['result']:
-        theta = np.array(request.json['result']['theta'])
-    else:
-        theta = np.linspace(0., 2*np.pi, 50)  # Default range
-
-    Bu = mm.B_theta(theta=theta, comps=0)
-    Bv = mm.B_theta(theta=theta, comps=1)
-    Bw = mm.B_theta(theta=theta, comps=2)
-    Bp = mm.B_theta(theta=theta, comps=3)
-
-    result = {'result': {
-        'theta': theta.tolist(),
-        'def_lat': Bu.dot(dm).tolist(),
-        'def_rad': Bv.dot(dm).tolist(),
-        'def_tan': Bw.dot(dm).tolist(),
-        'def_tor': Bp.dot(dm).tolist()
-    }}
-
-    return jsonify(result), 200
-
 @app.route('/calculate', methods=['POST'])
 def calculate():
     'Perform the calculations requested in the JSON POST object'
@@ -150,7 +101,57 @@ def solve_tensions(wheel, json):
 
 def solve_deformation(wheel, json):
     'Calculate the deformation of the wheel under the specified loads'
-    return {'success': False, 'error': 'Not Implemented'}
+
+    # Mode matrix model
+    mm = ModeMatrix(wheel, N=24)
+
+    if 'forces' in json:
+        F_ext = F_ext_from_json(json['forces'], mm)
+    else:
+        return {'success': False, 'error': 'Missing or invalid forces object'}
+
+    print(F_ext)
+
+    # Build stiffness matrix
+    K = (mm.K_rim(tension=True, r0=True) +
+         mm.K_spk(tension=True, smeared_spokes=False))
+
+    # Solve for modal deformation vector
+    try:
+        dm = np.linalg.solve(K, F_ext)
+    except Exception as e:
+        return {'success': False, 'error': 'Linear algebra error'}
+
+    # What values of theta to calculate deflection at
+    if 'theta_range' in json:
+        if len(json['theta_range']) == 2:
+            theta_range = (json['theta_range'][0],
+                           json['theta_range'][1],
+                           100)
+        else:
+            theta_range = json['theta_range']
+
+        theta = np.linspace(float(theta_range[0]),
+                            float(theta_range[1]),
+                            int(theta_range[2]))
+    elif 'theta' in json:
+        theta = np.array(json['theta'])
+    else:
+        theta = np.linspace(0., 2*np.pi, 50)  # Default range
+
+    Bu = mm.B_theta(theta=theta, comps=0)
+    Bv = mm.B_theta(theta=theta, comps=1)
+    Bw = mm.B_theta(theta=theta, comps=2)
+    Bp = mm.B_theta(theta=theta, comps=3)
+
+    return {
+        'success': True,
+        'theta': theta.tolist(),
+        'def_lat': Bu.dot(dm).tolist(),
+        'def_rad': Bv.dot(dm).tolist(),
+        'def_tan': Bw.dot(dm).tolist(),
+        'def_tor': Bp.dot(dm).tolist()
+    }
 
 def solve_stiffness(wheel, json):
     'Calculate wheel stiffness'
@@ -177,20 +178,19 @@ def F_ext_from_json(json, mode_matrix):
     # Start with empty force vector
     F_ext = mode_matrix.F_ext(f_theta=0., f=[0., 0., 0., 0.])
 
-    if 'forces' in json:
-        for f in json['forces']:
-            if 'magnitude' in f:
+    for f in json:
+        if 'magnitude' in f:
 
-                mag = np.array(f['magnitude'])
-                if len(mag) < 4:
-                    mag = np.pad(mag, (0, 4 - len(mag)))
-            else:
-                fc = {'f_rad': 0., 'f_lat': 0., 'f_tan': 0., 'm_tor': 0.}
-                fc.update(f)
+            mag = np.array(f['magnitude'])
+            if len(mag) < 4:
+                mag = np.pad(mag, (0, 4 - len(mag)))
+        else:
+            fc = {'f_rad': 0., 'f_lat': 0., 'f_tan': 0., 'm_tor': 0.}
+            fc.update(f)
 
-                mag = np.array([fc['f_lat'], fc['f_rad'], fc['f_tan'], fc['m_tor']])
+            mag = np.array([fc['f_lat'], fc['f_rad'], fc['f_tan'], fc['m_tor']])
 
-            F_ext = F_ext + mode_matrix.F_ext(f_theta=f['location'], f=mag)
+        F_ext = F_ext + mode_matrix.F_ext(f_theta=f['location'], f=mag)
 
     return F_ext
 
