@@ -1,8 +1,11 @@
 from flask import Flask, jsonify, make_response, request
+from flask_cors import CORS
 from bikewheelcalc import *
 
 
 app = Flask(__name__)
+
+CORS(app)
 
 
 # --------------------------------- ROUTES --------------------------------- #
@@ -11,7 +14,7 @@ app = Flask(__name__)
 
 @app.route('/')
 def hello():
-    return 'Hello World'
+    return 'Hello World', 200
 
 @app.route('/deform', methods=['POST'])
 def get_deformation():
@@ -110,7 +113,6 @@ def get_tensions():
         'd_tension': dT
     }}
 
-    # Not implemented
     return jsonify(result), 200
 
 @app.route('/stiffness', methods=['POST'])
