@@ -1,6 +1,7 @@
 from flask import Flask, jsonify, make_response, request
 from flask_cors import CORS
 from bikewheelcalc import *
+from numpy.linalg import LinAlgError
 
 
 app = Flask(__name__)
@@ -88,21 +89,6 @@ def calculate():
 
     return jsonify(response), 200
 
-# @app.route('/stiffness', methods=['POST'])
-def get_stiffness():
-    'Return stiffness properties of a wheel'
-
-    # Build wheel from POST data
-    w = wheel_from_json(request.json)
-
-    K_rad = calc_rad_stiff(w)
-    K_lat = calc_lat_stiff(w)
-    K_tor = calc_tor_stiff(w)
-
-    return jsonify({'radial_stiffness': K_rad,
-                    'lateral_stiffness': K_lat,
-                    'torsional_stiffness': K_tor}), 200
-
 
 # --------------------------------- HELPERS -------------------------------- #
 # Define functions to calculate wheel results                                #
@@ -168,7 +154,22 @@ def solve_deformation(wheel, json):
 
 def solve_stiffness(wheel, json):
     'Calculate wheel stiffness'
-    return {'success': False, 'error': 'Not Implemented'}
+
+    try:
+        K_rad = calc_rad_stiff(wheel)
+        K_lat = calc_lat_stiff(wheel)
+        K_tor = calc_tor_stiff(wheel)
+
+    except LinAlgError:
+        return {'success': False, 'error': 'Linear algebra error'}
+    except:
+        return {'success': False, 'error': 'Unknown error'}
+
+    return {
+        'radial_stiffness': K_rad,
+        'lateral_stiffness': K_lat,
+        'torsional_stiffness': K_tor
+    }
 
 def F_ext_from_json(json, mode_matrix):
     'Calculate modal force vector from JSON'
