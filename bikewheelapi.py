@@ -16,7 +16,7 @@ CORS(app)
 def hello():
     return 'Hello World', 200
 
-@app.route('/deform', methods=['POST'])
+# @app.route('/deform', methods=['POST'])
 def get_deformation():
     'Return the deformation of a wheel under a set of loads'
 
@@ -65,57 +65,30 @@ def get_deformation():
 
     return jsonify(result), 200
 
-@app.route('/tensions', methods=['POST'])
-def get_tensions():
-    'Return the spoke tensions of a wheel under a set of loads'
+@app.route('/calculate', methods=['POST'])
+def calculate():
+    'Perform the calculations requested in the JSON POST object'
 
-    wheel = wheel_from_json(request.json)
-    mm = ModeMatrix(wheel, N=24)
-    F_ext = F_ext_from_json(request.json, mm)
+    response = {}
 
-    K = (mm.K_rim(tension=True, r0=True) +
-         mm.K_spk(tension=True, smeared_spokes=False))
-
-    # Solve for modal deformation vector
-    try:
-        dm = np.linalg.solve(K, F_ext)
-    except Exception as e:
-        raise e
-
-    # Which spokes to return results for
-    if 'spokes_range' in request.json['result']:
-        if len(request.json['result']['spoke_range']) == 2:
-            spokes_range = (request.json['result']['spoke_range'][0],
-                            request.json['result']['spoke_range'][1],
-                            1)
-        else:
-            spokes_range = request.json['result']['spoke_range']
-
-        spokes = list(range(int(theta_range[0]),
-                            int(theta_range[1]),
-                            int(theta_range[2])))
-    elif 'spokes' in request.json['result']:
-        spokes = np.atleast_1d(np.array(request.json['result']['spokes'])).tolist()
+    # Build the wheel
+    if 'wheel' in request.json:
+        wheel = wheel_from_json(request.json['wheel'])
     else:
-        spokes = list(range(len(wheel.spokes)))  # Default: all spokes
+        return 'Missing or invalid wheel object', 400
 
-    # Calculate spoke tensions
-    dT = [-wheel.spokes[s].EA/wheel.spokes[s].length *
-          np.dot(wheel.spokes[s].n,
-                 mm.B_theta(wheel.spokes[s].rim_pt[1], comps=[0, 1, 2]).dot(dm))
-          for s in spokes]
+    if 'tension' in request.json:
+        response['tension'] = solve_tensions(wheel, request.json['tension'])
 
-    tension = [wheel.spokes[s].tension + dt for s, dt in zip(spokes, dT)]
+    if 'deformation' in request.json:
+        response['deformation'] = solve_deformation(wheel, request.json['deformation'])
 
-    result = {'result': {
-        'spokes': spokes,
-        'tension': tension,
-        'd_tension': dT
-    }}
+    if 'stiffness' in request.json:
+        response['stiffness'] = solve_stiffness(wheel, request.json['stiffness'])
 
-    return jsonify(result), 200
+    return jsonify(response), 200
 
-@app.route('/stiffness', methods=['POST'])
+# @app.route('/stiffness', methods=['POST'])
 def get_stiffness():
     'Return stiffness properties of a wheel'
 
@@ -134,6 +107,68 @@ def get_stiffness():
 # --------------------------------- HELPERS -------------------------------- #
 # Define functions to calculate wheel results                                #
 # -------------------------------------------------------------------------- #
+
+def solve_tensions(wheel, json):
+    'Calculate spoke tensions under the specified loads'
+    
+    # Mode matrix model
+    mm = ModeMatrix(wheel, N=24)
+
+    if 'forces' in json:
+        F_ext = F_ext_from_json(json['forces'], mm)
+    else:
+        return {'success': False, 'error': 'Missing or invalid forces object'}
+
+    # Build stiffness matrix
+    K = (mm.K_rim(tension=True, r0=True) +
+         mm.K_spk(tension=True, smeared_spokes=False))
+
+    # Solve for modal deformation vector
+    try:
+        dm = np.linalg.solve(K, F_ext)
+    except Exception as e:
+        return {'success': False, 'error': 'Linear algebra error'}
+
+    # Which spokes to return results for
+    if 'spokes_range' in json:
+        if len(json['spoke_range']) == 2:
+            spokes_range = (json['spoke_range'][0],
+                            json['spoke_range'][1],
+                            1)
+        else:
+            spokes_range = request.json['spoke_range']
+
+        spokes = list(range(int(theta_range[0]),
+                            int(theta_range[1]),
+                            int(theta_range[2])))
+
+    elif 'spokes' in json:
+        spokes = np.atleast_1d(np.array(json['spokes'])).tolist()
+    else:
+        spokes = list(range(len(wheel.spokes)))  # Default: all spokes
+
+    # Calculate spoke tensions
+    dT = [-wheel.spokes[s].EA/wheel.spokes[s].length *
+          np.dot(wheel.spokes[s].n,
+                 mm.B_theta(wheel.spokes[s].rim_pt[1], comps=[0, 1, 2]).dot(dm))
+          for s in spokes]
+
+    tension = [wheel.spokes[s].tension + dt for s, dt in zip(spokes, dT)]
+
+    return {
+        'success': True,
+        'spokes': spokes,
+        'tension': tension,
+        'd_tension': dT
+    }
+
+def solve_deformation(wheel, json):
+    'Calculate the deformation of the wheel under the specified loads'
+    return {'success': False, 'error': 'Not Implemented'}
+
+def solve_stiffness(wheel, json):
+    'Calculate wheel stiffness'
+    return {'success': False, 'error': 'Not Implemented'}
 
 def F_ext_from_json(json, mode_matrix):
     'Calculate modal force vector from JSON'

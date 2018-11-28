@@ -4,6 +4,7 @@ from bikewheelapi import app
 import matplotlib.pyplot as plt
 
 wheel_dict = {
+    'wheel': {
         'hub': {
             'diameter': 0.05,
             'width_nds': 0.025,
@@ -27,7 +28,7 @@ wheel_dict = {
             'young_mod': 210e9,
             'density': 8000.,
             'offset': 0.,
-            'tension': 0.}}
+            'tension': 0.}}}
 
 @pytest.fixture
 def client(request):
@@ -38,19 +39,26 @@ def client(request):
 
 def test_hello_world(client):
     response = client.get('/')
+
     assert b'Hello World' in response.data
+
+    assert response.status_code == 200
+
 
 def test_stiffness(client):
 
-    response = client.post('/stiffness', json=wheel_dict)
+    post = dict(wheel_dict)
+    post['stiffness'] = {}
 
-    assert np.allclose(response.json['lateral_stiffness'],
+    response = client.post('/calculate', json=post)
+
+    assert np.allclose(response.json['stiffness']['lateral_stiffness'],
                        94150.65602356319)
 
-    assert np.allclose(response.json['radial_stiffness'],
+    assert np.allclose(response.json['stiffness']['radial_stiffness'],
                        4255534.38869831)
 
-    assert np.allclose(response.json['torsional_stiffness'],
+    assert np.allclose(response.json['stiffness']['torsional_stiffness'],
                        108891.17398367148)
 
 def test_deformation_single(client):
@@ -80,24 +88,28 @@ def test_deformation_range(client):
     assert len(response.json['result']['def_rad']) == 10
 
 def test_tensions_single_spoke(client):
-    data = {'forces': [{'location': 0., 'magnitude': [0., 1., 0., 0.]}]}
-    data.update({'result': {'spokes': 0}})
-    data.update(wheel_dict)
+    'Get tension results for a single spoke'
 
-    response = client.post('/tensions', json=data)
+    post = dict(wheel_dict)
+    post['tension'] = {'forces': [{'location': 0., 'magnitude': [0., 1., 0., 0.]}],
+                        'spokes': [0]}
+
+    response = client.post('/calculate', json=post)
 
     assert response.status_code == 200
-
-    assert len(response.json['result']['tension']) == 1
+    assert response.json['tension']['success'] == True
+    assert len(response.json['tension']['tension']) == 1
+    assert len(response.json['tension']['d_tension']) == 1
 
 def test_tensions_all_spokes(client):
-    data = {'forces': [{'location': 0., 'magnitude': [0., 1., 0., 0.]}]}
-    data.update({'result': {}})
-    data.update(wheel_dict)
-    data['spokes']['tension'] = 1000.
+    'Get tension results for all spokes (default)'
 
-    response = client.post('/tensions', json=data)
+    post = dict(wheel_dict)
+    post['tension'] = {'forces': [{'location': 0., 'magnitude': [0., 1., 0., 0.]}]}
+
+    response = client.post('/calculate', json=post)
 
     assert response.status_code == 200
-
-    assert len(response.json['result']['tension']) == 36
+    assert response.json['tension']['success'] == True
+    assert len(response.json['tension']['tension']) == 36
+    assert len(response.json['tension']['d_tension']) == 36
