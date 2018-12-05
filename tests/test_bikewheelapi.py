@@ -119,8 +119,8 @@ def test_tensions_single_spoke(client, wheel_dict):
     assert response.status_code == 200
     assert response.json['tension']['success'] == True
     assert len(response.json['tension']['tension']) == 1
-    assert len(response.json['tension']['d_tension']) == 1
-    assert response.json['tension']['d_tension'][0] < 0
+    assert len(response.json['tension']['tension_change']) == 1
+    assert response.json['tension']['tension_change'][0] < 0
 
 def test_tensions_all_spokes(client, wheel_dict):
     'Get tension results for all spokes (default)'
@@ -135,4 +135,4 @@ def test_tensions_all_spokes(client, wheel_dict):
     assert response.status_code == 200
     assert response.json['tension']['success'] == True
     assert len(response.json['tension']['tension']) == 36
-    assert len(response.json['tension']['d_tension']) == 36
+    assert len(response.json['tension']['tension_change']) == 36

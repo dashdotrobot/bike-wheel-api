@@ -91,12 +91,14 @@ def solve_tensions(wheel, json):
           for s in spokes]
 
     tension = [wheel.spokes[s].tension + dt for s, dt in zip(spokes, dT)]
+    tension_0 = [wheel.spokes[s].tension for s in spokes]
 
     return {
         'success': True,
         'spokes': spokes,
         'tension': tension,
-        'd_tension': dT
+        'tension_initial': tension_0,
+        'tension_change': dT
     }
 
 def solve_deformation(wheel, json):
