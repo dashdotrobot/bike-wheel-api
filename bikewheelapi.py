@@ -38,6 +38,9 @@ def calculate():
     if 'stiffness' in request.json:
         response['stiffness'] = solve_stiffness(wheel, request.json['stiffness'])
 
+    if 'mass' in request.json:
+        response['mass'] = solve_mass(wheel, request.json['mass'])
+
     return jsonify(response), 200
 
 
@@ -172,6 +175,27 @@ def solve_stiffness(wheel, json):
         'radial_stiffness': K_rad,
         'lateral_stiffness': K_lat,
         'torsional_stiffness': K_tor
+    }
+
+def solve_mass(wheel, json):
+    'Calculate mass properties'
+
+    mass = wheel.calc_mass()
+    mass_rim = wheel.rim.calc_mass()
+
+    rot = wheel.calc_rot_inertia()
+    rot_rim = wheel.rim.calc_rot_inertia()
+
+    mass_eff = mass + rot / wheel.rim.radius**2
+
+    return {
+        'mass': mass,
+        'mass_rim': mass_rim,
+        'mass_spokes': mass - mass_rim,
+        'mass_rotational': mass_eff,
+        'inertia': rot,
+        'inertia_rim': rot_rim,
+        'inertia_spokes': rot - rot_rim,
     }
 
 def F_ext_from_json(json, mode_matrix):
