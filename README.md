@@ -103,3 +103,19 @@ deformation: {
 #### The `theta` or `theta_range` object
 
 Optionally specify specific points on the rim, by angular coordinate, at which to calculate the deformation. If neither is specified, the default is 100 equally-spaced points around the rim. The `theta` object defines a list of coordinates, in any order. The `theta_range` object defines a range of `<num>` equally-spaced points between (and including) `<start>` and `<stop>`. If `<num>` is omitted it will default to 100.
+
+### Calculating wheel stiffness
+
+Include the `stiffness` request object to calculate the principle stiffnesses of the wheel. The request object has no parameters. Simply supply an empty object.
+
+The response has the following form:
+
+```
+stiffness: {
+  radial_stiffness: <N/m>,      # Radial stiffness at theta=0
+  lateral_stiffness: <N/m>,     # Lateral stiffness at theta=0
+  torsional_stiffness: <N/rad>  # Torsional (wind-up) stiffness at theta=0
+}
+```
+
+Each stiffness is calculated by applying a single force with unit magnitude in the respective direction and calculating the deformation in that same direction. Therefore, the torsional stiffness is approximately, but not exactly, equal to the wind-up stiffness that would be expected when a force is applied at two points (e.g. during braking with rim brakes).
