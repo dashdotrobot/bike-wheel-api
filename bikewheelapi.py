@@ -238,7 +238,7 @@ def wheel_from_json(json):
             I_rad = float(json['rim']['section_params']['I_rad'])
             I_lat = float(json['rim']['section_params']['I_lat'])
             J_tor = float(json['rim']['section_params']['J_tor'])
-            I_warp = float(json['rim']['section_params']['I_warp'])
+            I_warp = float(json['rim']['section_params'].get('I_warp', 0.))
         else:
             raise TypeError("Invalid rim section type '{:s}'"
                             .format(json['rim']['section_type']))
@@ -247,7 +247,7 @@ def wheel_from_json(json):
                     I_rad=I_rad, I_lat=I_lat, J_tor=J_tor, I_warp=I_warp,
                     young_mod=float(json['rim']['young_mod']),
                     shear_mod=float(json['rim']['shear_mod']),
-                    density=float(json['rim']['density']))
+                    density=float(json['rim'].get('density', 0.)))
 
     else:
         raise KeyError('Rim definition not found in POST JSON')
