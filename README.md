@@ -54,10 +54,10 @@ In the future, other cross-section types may be available. Currently, the `secti
 ```
 section_params: {
   area: <m^2>,     # Required: Cross-sectional area
-  I_rad: <N-m^2>,  # Required: Second moment of area for radial bending
-  I_lat: <N-m^2>,  # Required: Second moment of area for lateral bending
-  J_tor: <N-m^2>,  # Required: Torsion constant
-  I_warp: <N-m^4>  # Optional (default 0): Warping constant
+  I_rad: <m^4>,    # Required: Second moment of area for radial bending
+  I_lat: <m^4>,    # Required: Second moment of area for lateral bending
+  J_tor: <m^4>,    # Required: Torsion constant
+  I_warp: <m^6>    # Optional (default 0): Warping constant
 }
 ```
 
@@ -174,7 +174,7 @@ stiffness: {
 }
 ```
 
-Each stiffness is calculated by applying a single force with unit magnitude in the respective direction and calculating the deformation in that same direction. Therefore, the torsional stiffness is approximately, but not exactly, equal to the wind-up stiffness that would be expected when a force is applied at two points (e.g. during braking with rim brakes).
+Each stiffness is calculated by applying a single force at theta=0 with unit magnitude in the respective direction and calculating the deformation in that same direction. Therefore, the torsional stiffness is approximately, but not exactly, equal to the wind-up stiffness that would be expected when a force is applied at two points (e.g. during braking with rim brakes).
 
 ### Calculating mass properties
 
