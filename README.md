@@ -24,8 +24,12 @@ The `wheel` object defines the properties of the wheel. It has the following for
 
 ```
 wheel: {
+  hub: {             # Required: Properties of the hub
+    diameter: <m>,     # Hub flange diameter (same on both sides)
+    width_ds: <m>,     # Lateral distance from rim to drive-side hub flange
+    width_nds: <m>     # Lateral distance from rim to non-drive-side hub flange
+  },
   rim: {...},        # Required: Properties of the rim
-  hub: {...},        # Required: Properties of the hub
   spokes: {...},     # Optional: Properties of the spokes (required if spokes_ds and spokes_nds are omitted)
   spokes_ds: {...}   # Optional: Properties of the drive-side spokes (required if spokes is omitted)
   spokes_nds: {...}  # Optional: Properties of the non-drive-side spokes (required if spokes is omitted)
