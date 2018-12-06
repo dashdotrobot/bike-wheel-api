@@ -1,6 +1,6 @@
 # Bike Wheel Calc API
 
-RESTful service for calculating mechanical properties of bicycle wheels, and simulating deformation and spoke tensions under external loads.
+RESTful service written in Python/Flask for calculating mechanical properties of bicycle wheels, and simulating deformation and spoke tensions under external loads.
 
 ## Usage
 
