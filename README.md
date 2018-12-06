@@ -4,7 +4,7 @@ RESTful service written in Python/Flask for calculating mechanical properties of
 
 ## Usage
 
-The server accepts a single JSON object using the POST method. The request object must contain a `wheel` object, and any combination of optional calculation requests.
+The server accepts a single JSON object using the POST method. The request object must contain a `wheel` object, and any combination of optional calculation requests. The request object has the following format:
 
 ```
 {
@@ -17,6 +17,45 @@ The server accepts a single JSON object using the POST method. The request objec
 ```
 
 The server responds with a JSON object with the results of the requested calculations, or descriptions of any errors.
+
+### The `wheel` object
+
+The `wheel` object defines the properties of the wheel. It has the following format:
+
+```
+wheel: {
+  rim: {...},        # Required: Properties of the rim
+  hub: {...},        # Required: Properties of the hub
+  spokes: {...},     # Optional: Properties of the spokes (required if spokes_ds and spokes_nds are omitted)
+  spokes_ds: {...}   # Optional: Properties of the drive-side spokes (required if spokes is omitted)
+  spokes_nds: {...}  # Optional: Properties of the non-drive-side spokes (required if spokes is omitted)
+}
+```
+
+The `rim` object has the following format:
+
+```
+rim: {
+  radius: <m>,               # Required: Radius of the rim (at its shear center)
+  young_mod: <Pa>,           # Required: Young's modulus of the rim material
+  shear_mod: <Pa>,           # Required: Shear modulus of the rim material
+  density: <kg/m^3>,         # Optional (default 0): Density of the rim material
+  section_type: "general",   # Required: Rim cross-section type (currently only "general" is supported)
+  section_params: {...}      # Required: Rim cross-section properties
+}
+```
+
+In the future, other cross-section types may be available. Currently, the `section_params` object must specify all the section stiffness constants:
+
+```
+section_params: {
+  area: <m^2>,     # Required: Cross-sectional area
+  I_rad: <N-m^2>,  # Required: Second moment of area for radial bending
+  I_lat: <N-m^2>,  # Required: Second moment of area for lateral bending
+  J_tor: <N-m^2>,  # Required: Torsion constant
+  I_warp: <N-m^4>  # Optional (default 0): Warping constant
+}
+```
 
 ### Calculating spoke tensions
 
