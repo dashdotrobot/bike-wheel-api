@@ -119,3 +119,23 @@ stiffness: {
 ```
 
 Each stiffness is calculated by applying a single force with unit magnitude in the respective direction and calculating the deformation in that same direction. Therefore, the torsional stiffness is approximately, but not exactly, equal to the wind-up stiffness that would be expected when a force is applied at two points (e.g. during braking with rim brakes).
+
+### Calculating mass properties
+
+Include the `mass` request object to calculate the mass and rotational inertia of the wheel and individual components. The request object has no parameters.
+
+The response has the following form:
+
+```
+mass: {
+  mass: <kg>,               # Mass of the wheel (minus hub) in kilograms
+  mass_rim: <kg>,           # Mass of the rim
+  mass_spokes: <kg>,        # Mass of the spokes (equivalent to mass - mass_rim)
+  mass_rotational: <kg>,    # Effective rotating mass of the wheel in kilograms
+  inertia: <kg-m^2>,        # Rotational inertia of the wheel in kilogram meters squared
+  inertia_rim: <kg-m^2>,    # Rotational inertia of the rim
+  inertia_spokes: <kg-m^2>  # Rotational inertia of the spokes (equivalent to inertia - inertia_rim)
+}
+```
+
+The effective rotating mass is the mass which is felt when accelerating the bicycle. It is equal to the mass of an object which would require the same energy to bring to a constant velocity V as would be required to bring a rolling bicycle wheel to a constant center-of-mass velocity V, with no slipping. The effective rotating mass of a wheel has theoretical minimum of `1.333*mass` and a theoretical maximum of `2*mass`, assuming that the spokes do not taper towards the rim and the rim rolls on its circumference.
