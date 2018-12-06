@@ -61,6 +61,19 @@ section_params: {
 }
 ```
 
+The `spokes`, `spokes_ds`, or `spokes_nds` objects have the following identical format:
+
+```
+<spokes | spokes_ds | spokes_nds>: {
+  num: <integer>,        # Required: Number of spokes
+  num_cross: <integer>,  # Required: Number of crossings in spoke pattern (e.g. 3)
+  diameter: <m>,         # Required: Spoke diameter
+  offset: <m>,           # Optional (default 0): Lateral offset of the spoke nipple from rim centerline (positive=towards hub flange)
+  young_mod: <Pa>,       # Required: Young's modulus of the spoke material
+  density: <kg/m^3>      # Optional (default 0): Density of the spoke material
+}
+```
+
 ### Calculating spoke tensions
 
 Include the `tension` request object to calculate the new spoke tensions in a wheel subject to external forces. The request has the following form:
