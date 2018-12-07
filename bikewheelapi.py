@@ -172,6 +172,7 @@ def solve_stiffness(wheel, json):
         return {'success': False, 'error': 'Unknown error'}
 
     return {
+        'success': True,
         'radial_stiffness': K_rad,
         'lateral_stiffness': K_lat,
         'torsional_stiffness': K_tor
@@ -189,6 +190,7 @@ def solve_mass(wheel, json):
     mass_eff = mass + rot / wheel.rim.radius**2
 
     return {
+        'success': True,
         'mass': mass,
         'mass_rim': mass_rim,
         'mass_spokes': mass - mass_rim,
