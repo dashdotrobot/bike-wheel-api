@@ -38,6 +38,9 @@ def calculate():
     if 'stiffness' in request.json:
         response['stiffness'] = solve_stiffness(wheel, request.json['stiffness'])
 
+    if 'buckling_tension' in request.json:
+        response['buckling_tension'] = solve_buckling_tension(wheel, request.json['buckling_tension'])
+
     if 'mass' in request.json:
         response['mass'] = solve_mass(wheel, request.json['mass'])
 
@@ -115,8 +118,6 @@ def solve_deformation(wheel, json):
     else:
         return {'success': False, 'error': 'Missing or invalid forces object'}
 
-    print(F_ext)
-
     # Build stiffness matrix
     K = (mm.K_rim(tension=True, r0=True) +
          mm.K_spk(tension=True, smeared_spokes=False))
@@ -172,9 +173,32 @@ def solve_stiffness(wheel, json):
         return {'success': False, 'error': 'Unknown error'}
 
     return {
+        'success': True,
         'radial_stiffness': K_rad,
         'lateral_stiffness': K_lat,
         'torsional_stiffness': K_tor
+    }
+
+def solve_buckling_tension(wheel, json):
+    'Calculate buckling tension'
+
+    if 'approx' in json:
+        approx = json['approx']
+    else:
+        approx = 'linear'
+
+    try:
+        Tc, nc = calc_buckling_tension(wheel, approx=approx)
+    except ValueError as e:
+        return {'success': False, 'error': str(e)}
+    except:
+        return {'success': False, 'error': 'Unknown error'}
+
+    return {
+        'success': True,
+        'approx': approx,
+        'buckling_tension': Tc,
+        'buckling_mode': nc
     }
 
 def solve_mass(wheel, json):
@@ -189,6 +213,7 @@ def solve_mass(wheel, json):
     mass_eff = mass + rot / wheel.rim.radius**2
 
     return {
+        'success': True,
         'mass': mass,
         'mass_rim': mass_rim,
         'mass_spokes': mass - mass_rim,
