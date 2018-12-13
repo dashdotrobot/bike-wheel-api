@@ -8,11 +8,11 @@ The server accepts a single JSON object using the POST method. The request objec
 
 ```
 {
-  wheel: {...},        # Required
-  tension: {...},      # Optional: calculate spoke tensions under the given loads
-  deformation: {...},  # Optional: calculate deformation under the given loads
-  stiffness: {...},    # Optional: calculate stiffnesses
-  mass: {...}          # Optional: calculate mass and inertia properties
+  wheel: {...}        # Required
+  tension: {...}      # Optional: calculate spoke tensions under the given loads
+  deformation: {...}  # Optional: calculate deformation under the given loads
+  stiffness: {...}    # Optional: calculate stiffnesses
+  mass: {...}         # Optional: calculate mass and inertia properties
 }
 ```
 
@@ -25,12 +25,12 @@ The `wheel` object defines the properties of the wheel. It has the following for
 ```
 wheel: {
   hub: {             # Required: Properties of the hub
-    diameter: <m>,     # Hub flange diameter (same on both sides)
-    width_ds: <m>,     # Lateral distance from rim to drive-side hub flange
+    diameter: <m>      # Hub flange diameter (same on both sides)
+    width_ds: <m>      # Lateral distance from rim to drive-side hub flange
     width_nds: <m>     # Lateral distance from rim to non-drive-side hub flange
   },
-  rim: {...},        # Required: Properties of the rim
-  spokes: {...},     # Optional: Properties of the spokes (required if spokes_ds and spokes_nds are omitted)
+  rim: {...}         # Required: Properties of the rim
+  spokes: {...}      # Optional: Properties of the spokes (required if spokes_ds and spokes_nds are omitted)
   spokes_ds: {...}   # Optional: Properties of the drive-side spokes (required if spokes is omitted)
   spokes_nds: {...}  # Optional: Properties of the non-drive-side spokes (required if spokes is omitted)
 }
@@ -40,12 +40,12 @@ The `rim` object has the following format:
 
 ```
 rim: {
-  radius: <m>,               # Required: Radius of the rim (at its shear center)
-  young_mod: <Pa>,           # Required: Young's modulus of the rim material
-  shear_mod: <Pa>,           # Required: Shear modulus of the rim material
-  density: <kg/m^3>,         # Optional (default 0): Density of the rim material
-  section_type: "general",   # Required: Rim cross-section type (currently only "general" is supported)
-  section_params: {...}      # Required: Rim cross-section properties
+  radius: <m>               # Required: Radius of the rim (at its shear center)
+  young_mod: <Pa>           # Required: Young's modulus of the rim material
+  shear_mod: <Pa>           # Required: Shear modulus of the rim material
+  density: <kg/m^3>         # Optional (default 0): Density of the rim material
+  section_type: "general"   # Required: Rim cross-section type (currently only "general" is supported)
+  section_params: {...}     # Required: Rim cross-section properties
 }
 ```
 
@@ -53,11 +53,11 @@ In the future, other cross-section types may be available. Currently, the `secti
 
 ```
 section_params: {
-  area: <m^2>,     # Required: Cross-sectional area
-  I_rad: <m^4>,    # Required: Second moment of area for radial bending
-  I_lat: <m^4>,    # Required: Second moment of area for lateral bending
-  J_tor: <m^4>,    # Required: Torsion constant
-  I_warp: <m^6>    # Optional (default 0): Warping constant
+  area: <m^2>     # Required: Cross-sectional area
+  I_rad: <m^4>    # Required: Second moment of area for radial bending
+  I_lat: <m^4>    # Required: Second moment of area for lateral bending
+  J_tor: <m^4>    # Required: Torsion constant
+  I_warp: <m^6>   # Optional (default 0): Warping constant
 }
 ```
 
@@ -65,12 +65,12 @@ The `spokes`, `spokes_ds`, or `spokes_nds` objects have the following identical 
 
 ```
 <spokes | spokes_ds | spokes_nds>: {
-  num: <integer>,        # Required: Number of spokes
-  num_cross: <integer>,  # Required: Number of crossings in spoke pattern (e.g. 3)
-  diameter: <m>,         # Required: Spoke diameter
-  offset: <m>,           # Optional (default 0): Lateral offset of the spoke nipple from rim centerline (positive=towards hub flange)
-  young_mod: <Pa>,       # Required: Young's modulus of the spoke material
-  density: <kg/m^3>      # Optional (default 0): Density of the spoke material
+  num: <integer>        # Required: Number of spokes
+  num_cross: <integer>  # Required: Number of crossings in spoke pattern (e.g. 3)
+  diameter: <m>         # Required: Spoke diameter
+  offset: <m>           # Optional (default 0): Lateral offset of the spoke nipple from rim centerline (positive=towards hub flange)
+  young_mod: <Pa>       # Required: Young's modulus of the spoke material
+  density: <kg/m^3>     # Optional (default 0): Density of the spoke material
 }
 ```
 
@@ -81,13 +81,13 @@ Include the `tension` request object to calculate the new spoke tensions in a wh
 ```
 tension: {
   forces: [                                                    # Required: List of force objects
-    {location: <radians>, f_rad: <N>},                         # A single radial force
-    {location: <radians>, f_lat: <N>, f_tan: <N>},             # OR use any combination of f_lat, f_rad, f_tan, and m_tor
-    {location: <radians>, magnitude: [<N>, <N>, <N>, <N-m>]},  # OR specify a force vector (plus torque)
+    {location: <radians>, f_rad: <N>}                          # A single radial force
+    {location: <radians>, f_lat: <N>, f_tan: <N>}              # OR use any combination of f_lat, f_rad, f_tan, and m_tor
+    {location: <radians>, magnitude: [<N>, <N>, <N>, <N-m>]}   # OR specify a force vector (plus torque)
     ...
   ],
-  spokes: [<list of spoke indices, starting at 0>],  # Optional: List of spokes to calculate results for
-  spokes_range: [<start>, <stop>, <step>]            # Optional: Range of spokes to calculate results for
+  spokes: [<list of spoke indices, starting at 0>]  # Optional: List of spokes to calculate results for
+  spokes_range: [<start>, <stop>, <step>]           # Optional: Range of spokes to calculate results for
 }
 ```
 
@@ -95,12 +95,12 @@ The response has the following form:
 
 ```
 tension: {
-  success: <true | false>,    # Whether calculation was successful
-  error: 'String',            # Optional: Description of error if one occurred
-  spokes: [...],              # List of spoke indices for which results have been calculated
-  tension: [<N>...],          # List of spoke tensions in the deformed wheel
-  tension_initial: [<N>...],  # List of initial spoke tensions in the undeformed wheel
-  tension_change: [<N>...]    # List of changes in spoke tension. Equivalent to tension - tension_initial
+  success: <true | false>    # Whether calculation was successful
+  error: 'String'            # Optional: Description of error if one occurred
+  spokes: [...]              # List of spoke indices for which results have been calculated
+  tension: [<N>...]          # List of spoke tensions in the deformed wheel
+  tension_initial: [<N>...]  # List of initial spoke tensions in the undeformed wheel
+  tension_change: [<N>...]   # List of changes in spoke tension. Equivalent to tension - tension_initial
 }
 ```
 
@@ -136,9 +136,9 @@ Include the `deformation` request object to calculate the distortion of the rim 
 
 ```
 deformation: {
-  forces: [...],                             # Same format as in the tension request object
-  theta: [<radians>...],                     # Optional: List of angular positions at which to calculate the deformation
-  theta_range: [<start>, <stop>, <number>]   # Optional: Range of angular positions
+  forces: [...]                             # Same format as in the tension request object
+  theta: [<radians>...]                     # Optional: List of angular positions at which to calculate the deformation
+  theta_range: [<start>, <stop>, <number>]  # Optional: Range of angular positions
 }
 ```
 
@@ -146,13 +146,13 @@ The response has the following form:
 
 ```
 deformation: {
-  success: <true | false>,    # Whether calculation was successful
-  error: 'String',            # Optional: Description of error if one occurred
-  theta: [<radians>...],      # List of angular positions where results are given
-  def_lat: [<m>...],          # Lateral deflection of the rim, in meters
-  def_rad: [<m>...],          # Radial deflection of the rim, in meters
-  def_tan: [<m>...],          # Tagential deflection of the rim, in meters
-  def_tor: [<m>...],          # Torsional 'twist' of the rim around its own axis, in radians
+  success: <true | false>  # Whether calculation was successful
+  error: 'String'          # Optional: Description of error if one occurred
+  theta: [<radians>...]    # List of angular positions where results are given
+  def_lat: [<m>...]        # Lateral deflection of the rim, in meters
+  def_rad: [<m>...]        # Radial deflection of the rim, in meters
+  def_tan: [<m>...]        # Tagential deflection of the rim, in meters
+  def_tor: [<m>...]        # Torsional 'twist' of the rim around its own axis, in radians
 }
 ```
 
@@ -168,8 +168,10 @@ The response has the following form:
 
 ```
 stiffness: {
-  radial_stiffness: <N/m>,      # Radial stiffness at theta=0
-  lateral_stiffness: <N/m>,     # Lateral stiffness at theta=0
+  success: <true | false>       # Whether calculation was successful
+  error: 'String'               # Optional: Description of error if one occurred
+  radial_stiffness: <N/m>       # Radial stiffness at theta=0
+  lateral_stiffness: <N/m>      # Lateral stiffness at theta=0
   torsional_stiffness: <N/rad>  # Torsional (wind-up) stiffness at theta=0
 }
 ```
@@ -195,3 +197,36 @@ mass: {
 ```
 
 The effective rotating mass is the mass which is felt when accelerating the bicycle. It is equal to the mass of an object which would require the same energy to bring to a constant velocity V as would be required to bring a rolling bicycle wheel to a constant center-of-mass velocity V, with no slipping. The effective rotating mass of a wheel has theoretical minimum of `1.333*mass` and a theoretical maximum of `2*mass`, assuming that the spokes do not taper towards the rim and the rim rolls on its circumference.
+
+### Calculating buckling tension
+
+Include the `buckling_tension` request object to calculate the critical buckling tension. The request object has the following form:
+
+```
+buckling_tension: {
+  approx: <linear | quadratic | small_mu>  # (Optional, default=linear)
+}
+```
+
+The optional argument `approx` specifies which equation should be used to calculate the buckling tension.
+* `linear` uses Eqn. (4.4) from reference [1]
+* `quadratic` uses Eqn. (4.3) from reference [1]
+* `small_mu` uses Eqn. (4.10) from reference [1]
+
+The response has the following form:
+
+```
+buckling_tension: {
+  success: <true | false>                  # Whether calculation was successful
+  error: 'String'                          # Optional: Description of error if one occurred
+  approx: <linear | quadratic | small_mu>  # The approximation used
+  buckling_tension: <N>                    # The critical tension in Newtons
+  buckling_mode: <number>                  # The critical buckling mode number
+}
+```
+
+If the `small_mu` approximation is used, the `buckling_mode` need not be an integer.
+
+## References
+
+[1] Matthew Ford, [Reinventing the Wheel: Stress Analysis, Stability, and Optimization of the Bicycle Wheel](https://github.com/dashdotrobot/phd-thesis/releases/download/v1.0/Ford_BicycleWheelThesis_v1.0.pdf), Ph.D. Thesis, Northwestern University (2018)
