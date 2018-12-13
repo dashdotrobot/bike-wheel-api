@@ -24,9 +24,10 @@ def calculate():
     response = {}
 
     # Build the wheel
-    if 'wheel' in request.json:
+    try:
         wheel = wheel_from_json(request.json['wheel'])
-    else:
+        response['wheel'] = request.json['wheel']
+    except:
         return 'Missing or invalid wheel object', 400
 
     if 'tension' in request.json:
