@@ -115,8 +115,6 @@ def solve_deformation(wheel, json):
     else:
         return {'success': False, 'error': 'Missing or invalid forces object'}
 
-    print(F_ext)
-
     # Build stiffness matrix
     K = (mm.K_rim(tension=True, r0=True) +
          mm.K_spk(tension=True, smeared_spokes=False))
