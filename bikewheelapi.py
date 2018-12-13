@@ -38,6 +38,9 @@ def calculate():
     if 'stiffness' in request.json:
         response['stiffness'] = solve_stiffness(wheel, request.json['stiffness'])
 
+    if 'buckling_tension' in request.json:
+        response['buckling_tension'] = solve_buckling_tension(wheel, request.json['buckling_tension'])
+
     if 'mass' in request.json:
         response['mass'] = solve_mass(wheel, request.json['mass'])
 
@@ -174,6 +177,27 @@ def solve_stiffness(wheel, json):
         'radial_stiffness': K_rad,
         'lateral_stiffness': K_lat,
         'torsional_stiffness': K_tor
+    }
+
+def solve_buckling_tension(wheel, json):
+    'Calculate buckling tension'
+
+    if 'approx' in json:
+        approx = json['approx']
+    else:
+        approx = 'linear'
+
+    try:
+        Tc, nc = calc_buckling_tension(wheel, approx=approx)
+    except ValueError as e:
+        return {'success': False, 'error': e}
+    except:
+        return {'success': False, 'error': 'Unknown error'}
+
+    return {
+        'success': True,
+        'buckling_tension': Tc,
+        'buckling_mode': nc
     }
 
 def solve_mass(wheel, json):
