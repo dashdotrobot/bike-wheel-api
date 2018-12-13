@@ -196,6 +196,7 @@ def solve_buckling_tension(wheel, json):
 
     return {
         'success': True,
+        'approx': approx,
         'buckling_tension': Tc,
         'buckling_mode': nc
     }
