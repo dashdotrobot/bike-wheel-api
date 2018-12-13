@@ -190,7 +190,7 @@ def solve_buckling_tension(wheel, json):
     try:
         Tc, nc = calc_buckling_tension(wheel, approx=approx)
     except ValueError as e:
-        return {'success': False, 'error': e}
+        return {'success': False, 'error': str(e)}
     except:
         return {'success': False, 'error': 'Unknown error'}
 

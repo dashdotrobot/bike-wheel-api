@@ -136,3 +136,33 @@ def test_tensions_all_spokes(client, wheel_dict):
     assert response.json['tension']['success'] == True
     assert len(response.json['tension']['tension']) == 36
     assert len(response.json['tension']['tension_change']) == 36
+
+def test_Tc_linear(client, wheel_dict):
+    'Calculate buckling tension and mode with linear approximation'
+
+    post = dict(wheel_dict)
+    post['buckling_tension'] = {
+        'approx': 'linear'
+    }
+
+    response = client.post('/calculate', json=post)
+
+    assert response.status_code == 200
+    assert response.json['buckling_tension']['success'] == True
+    assert np.allclose(response.json['buckling_tension']['buckling_tension'],
+                       1787.1372120201747)
+    assert response.json['buckling_tension']['buckling_mode'] == 2
+
+def test_Tc_wrong_approx(client, wheel_dict):
+    'Try sending an invalid approximation type'
+
+    post = dict(wheel_dict)
+    post['buckling_tension'] = {
+        'approx': 'xyzrandom'
+    }
+
+    response = client.post('/calculate', json=post)
+
+    assert response.status_code == 200
+    assert response.json['buckling_tension']['success'] == False
+    assert response.json['buckling_tension']['error'] == 'Unknown approximation: xyzrandom'
