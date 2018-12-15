@@ -30,7 +30,7 @@ def calculate(event, context):
         response['buckling_tension'] = solve_buckling_tension(wheel, event['buckling_tension'])
 
     if 'mass' in event:
-        response['mass'] = solve_mass(wheel, event.json['mass'])
+        response['mass'] = solve_mass(wheel, event['mass'])
 
     return response, 200
 
