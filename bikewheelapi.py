@@ -11,6 +11,13 @@ def calculate(event, context):
 
     response = {}
 
+    return {
+        'statusCode': 200,
+        'headers': {},
+        'body': json.dumps(event),
+        'isBase64Encoded': False
+    }
+
     # Build the wheel
     try:
         wheel = wheel_from_json(event['wheel'])
