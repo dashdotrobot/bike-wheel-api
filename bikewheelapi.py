@@ -14,34 +14,36 @@ def calculate(event, context):
 
     # Build the wheel
     try:
+        status_code = 200
+        
         wheel = wheel_from_json(request['wheel'])
         response['wheel'] = request['wheel']
+
+        if 'tension' in request:
+            response['tension'] = solve_tensions(wheel, request['tension'])
+
+        if 'deformation' in request:
+            response['deformation'] = solve_deformation(wheel, request['deformation'])
+
+        if 'stiffness' in request:
+            response['stiffness'] = solve_stiffness(wheel, request['stiffness'])
+
+        if 'buckling_tension' in request:
+            response['buckling_tension'] = solve_buckling_tension(wheel, request['buckling_tension'])
+
+        if 'mass' in request:
+            response['mass'] = solve_mass(wheel, request['mass'])
+
     except:
-        return {
-            'statusCode': 200,
-            'headers': {},
-            'body': json.dumps({'success': False, 'error': 'Missing or invalid wheel parameters'}),
-            'isBase64Encoded': False
-        }
-
-    if 'tension' in request:
-        response['tension'] = solve_tensions(wheel, request['tension'])
-
-    if 'deformation' in request:
-        response['deformation'] = solve_deformation(wheel, request['deformation'])
-
-    if 'stiffness' in request:
-        response['stiffness'] = solve_stiffness(wheel, request['stiffness'])
-
-    if 'buckling_tension' in request:
-        response['buckling_tension'] = solve_buckling_tension(wheel, request['buckling_tension'])
-
-    if 'mass' in request:
-        response['mass'] = solve_mass(wheel, request['mass'])
+        status_code = 200
+        response = {'success': False, 'error': 'Missing or invalid wheel parameters'}
 
     return {
-        'statusCode': 200,
-        'headers': {},
+        'statusCode': status_code,
+        'headers': {
+            "Access-Control-Allow-Headers": 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,x-requested-with',
+            "Access-Control-Allow-Origin": '*',
+            "Access-Control-Allow-Methods": 'POST,GET,OPTIONS'},
         'body': json.dumps(response),
         'isBase64Encoded': False
     }
