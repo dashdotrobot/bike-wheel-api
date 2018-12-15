@@ -1,51 +1,38 @@
-from flask import Flask, jsonify, make_response, request
-from flask_cors import CORS
 from bikewheelcalc import *
 from numpy.linalg import LinAlgError
-
-
-app = Flask(__name__)
-
-CORS(app)
-
 
 # --------------------------------- ROUTES --------------------------------- #
 # Define application endpoints                                               #
 # -------------------------------------------------------------------------- #
 
-@app.route('/')
-def hello():
-    return 'Hello World', 200
-
-@app.route('/calculate', methods=['POST'])
-def calculate():
+def calculate(event, context):
     'Perform the calculations requested in the JSON POST object'
 
     response = {}
 
     # Build the wheel
     try:
-        wheel = wheel_from_json(request.json['wheel'])
-        response['wheel'] = request.json['wheel']
+        wheel = wheel_from_json(event['wheel'])
+        response['wheel'] = event['wheel']
     except:
         return 'Missing or invalid wheel object', 400
 
-    if 'tension' in request.json:
-        response['tension'] = solve_tensions(wheel, request.json['tension'])
+    if 'tension' in event:
+        response['tension'] = solve_tensions(wheel, event['tension'])
 
-    if 'deformation' in request.json:
-        response['deformation'] = solve_deformation(wheel, request.json['deformation'])
+    if 'deformation' in event:
+        response['deformation'] = solve_deformation(wheel, event['deformation'])
 
-    if 'stiffness' in request.json:
-        response['stiffness'] = solve_stiffness(wheel, request.json['stiffness'])
+    if 'stiffness' in event:
+        response['stiffness'] = solve_stiffness(wheel, event['stiffness'])
 
-    if 'buckling_tension' in request.json:
-        response['buckling_tension'] = solve_buckling_tension(wheel, request.json['buckling_tension'])
+    if 'buckling_tension' in event:
+        response['buckling_tension'] = solve_buckling_tension(wheel, event['buckling_tension'])
 
-    if 'mass' in request.json:
-        response['mass'] = solve_mass(wheel, request.json['mass'])
+    if 'mass' in event:
+        response['mass'] = solve_mass(wheel, event.json['mass'])
 
-    return jsonify(response), 200
+    return response, 200
 
 
 # --------------------------------- HELPERS -------------------------------- #
@@ -80,7 +67,7 @@ def solve_tensions(wheel, json):
                             json['spoke_range'][1],
                             1)
         else:
-            spokes_range = request.json['spoke_range']
+            spokes_range = json['spoke_range']
 
         spokes = list(range(int(theta_range[0]),
                             int(theta_range[1]),
