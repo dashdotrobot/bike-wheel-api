@@ -9,7 +9,7 @@ from numpy.linalg import LinAlgError
 def calculate(event, context):
     'Perform the calculations requested in the JSON POST object'
 
-    request = event['body']
+    request = json.loads(event['body'])
     response = {}
 
     # Build the wheel
