@@ -9,19 +9,13 @@ from numpy.linalg import LinAlgError
 def calculate(event, context):
     'Perform the calculations requested in the JSON POST object'
 
+    request = event['body']
     response = {}
-
-    return {
-        'statusCode': 200,
-        'headers': {},
-        'body': json.dumps(event),
-        'isBase64Encoded': False
-    }
 
     # Build the wheel
     try:
-        wheel = wheel_from_json(event['wheel'])
-        response['wheel'] = event['wheel']
+        wheel = wheel_from_json(request['wheel'])
+        response['wheel'] = request['wheel']
     except:
         return {
             'statusCode': 200,
@@ -30,20 +24,20 @@ def calculate(event, context):
             'isBase64Encoded': False
         }
 
-    if 'tension' in event:
-        response['tension'] = solve_tensions(wheel, event['tension'])
+    if 'tension' in request:
+        response['tension'] = solve_tensions(wheel, request['tension'])
 
-    if 'deformation' in event:
-        response['deformation'] = solve_deformation(wheel, event['deformation'])
+    if 'deformation' in request:
+        response['deformation'] = solve_deformation(wheel, request['deformation'])
 
-    if 'stiffness' in event:
-        response['stiffness'] = solve_stiffness(wheel, event['stiffness'])
+    if 'stiffness' in request:
+        response['stiffness'] = solve_stiffness(wheel, request['stiffness'])
 
-    if 'buckling_tension' in event:
-        response['buckling_tension'] = solve_buckling_tension(wheel, event['buckling_tension'])
+    if 'buckling_tension' in request:
+        response['buckling_tension'] = solve_buckling_tension(wheel, request['buckling_tension'])
 
-    if 'mass' in event:
-        response['mass'] = solve_mass(wheel, event['mass'])
+    if 'mass' in request:
+        response['mass'] = solve_mass(wheel, request['mass'])
 
     return {
         'statusCode': 200,
