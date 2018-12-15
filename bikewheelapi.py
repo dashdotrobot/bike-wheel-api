@@ -15,7 +15,7 @@ def calculate(event, context):
         wheel = wheel_from_json(event['wheel'])
         response['wheel'] = event['wheel']
     except:
-        return 'Missing or invalid wheel object', 400
+        return {'success': False, 'error': 'Missing or invalid wheel object'}
 
     if 'tension' in event:
         response['tension'] = solve_tensions(wheel, event['tension'])
@@ -32,7 +32,7 @@ def calculate(event, context):
     if 'mass' in event:
         response['mass'] = solve_mass(wheel, event['mass'])
 
-    return response, 200
+    return response
 
 
 # --------------------------------- HELPERS -------------------------------- #
