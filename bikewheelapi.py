@@ -19,8 +19,8 @@ def calculate(event, context):
         return {
             'statusCode': 200,
             'headers': {},
-            'body': {'success': False, 'error': 'Missing or invalid wheel parameters'}
-            'isBase64Encoded': False,
+            'body': {'success': False, 'error': 'Missing or invalid wheel parameters'},
+            'isBase64Encoded': False
         }
 
     if 'tension' in event:
