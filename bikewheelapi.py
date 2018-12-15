@@ -1,3 +1,4 @@
+import json
 from bikewheelcalc import *
 from numpy.linalg import LinAlgError
 
@@ -15,7 +16,12 @@ def calculate(event, context):
         wheel = wheel_from_json(event['wheel'])
         response['wheel'] = event['wheel']
     except:
-        return {'success': False, 'error': 'Missing or invalid wheel object'}
+        return {
+            'statusCode': 200,
+            'headers': {},
+            'body': {'success': False, 'error': 'Missing or invalid wheel parameters'}
+            'isBase64Encoded': False,
+        }
 
     if 'tension' in event:
         response['tension'] = solve_tensions(wheel, event['tension'])
@@ -32,7 +38,12 @@ def calculate(event, context):
     if 'mass' in event:
         response['mass'] = solve_mass(wheel, event['mass'])
 
-    return response
+    return {
+        'statusCode': 200,
+        'headers': {},
+        'body': json.dumps(response),
+        'isBase64Encoded': False
+    }
 
 
 # --------------------------------- HELPERS -------------------------------- #
