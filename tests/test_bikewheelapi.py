@@ -198,3 +198,17 @@ def test_Tc_wrong_approx(client, wheel_dict):
     assert response.status_code == 200
     assert response.json['buckling_tension']['success'] == False
     assert response.json['buckling_tension']['error'] == 'Unknown approximation: xyzrandom'
+
+def test_hub_diff_flanges(client, wheel_dict):
+    'Build a wheel with different hub flange diameters'
+
+    post = dict(wheel_dict)
+    post['wheel']['hub'] = {'diameter_ds': 0.05, 'diameter_nds': 0.04,
+                            'width_ds': 0.02, 'width_nds': 0.03}
+    post['mass'] = {}
+
+    response = client.post('/calculate', json=post)
+
+    assert response.status_code == 200
+    assert response.json['wheel']['hub']['diameter_ds'] == 0.05
+    assert response.json['wheel']['hub']['diameter_nds'] == 0.04

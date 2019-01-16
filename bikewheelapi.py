@@ -253,9 +253,17 @@ def wheel_from_json(json):
     w = BicycleWheel()
 
     # Hub
-    w.hub = Hub(diameter=float(json['hub']['diameter']),
-                width_nds=float(json['hub']['width_nds']),
-                width_ds=float(json['hub']['width_ds']))
+    if 'diameter_ds' in json['hub'] and 'diameter_nds' in json['hub']:
+        w.hub = Hub(diameter_ds=float(json['hub']['diameter_ds']),
+                    diameter_nds=float(json['hub']['diameter_nds']),
+                    width_nds=float(json['hub']['width_nds']),
+                    width_ds=float(json['hub']['width_ds']))
+    elif 'diameter' in json['hub']:
+        w.hub = Hub(diameter=float(json['hub']['diameter']),
+                    width_nds=float(json['hub']['width_nds']),
+                    width_ds=float(json['hub']['width_ds']))
+    else:
+        raise KeyError('Missing or invalid rim definition in POST JSON')
 
     # Rim
     if 'rim' in json:
@@ -277,7 +285,7 @@ def wheel_from_json(json):
                     density=float(json['rim'].get('density', 0.)))
 
     else:
-        raise KeyError('Rim definition not found in POST JSON')
+        raise KeyError('Missing or invalid rim definition in POST JSON')
 
     # Spokes
     if 'spokes' in json:
