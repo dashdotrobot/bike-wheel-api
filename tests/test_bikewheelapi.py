@@ -1,7 +1,27 @@
 import pytest
+from json import dumps, loads
 import numpy as np
-from bikewheelapi import app
+from bikewheelapi import calculate
 import matplotlib.pyplot as plt
+
+
+class Response:
+    def __init__(self, response=None):
+        if response:
+            self.status_code = response['statusCode']
+            self.json = loads(response['body'])
+
+class TestClient:
+    def post(self, endpoint, json):
+        event = {'body': dumps(json)}
+        return Response(calculate(event, context=None))
+
+    def get(self, endpoint):
+        response = Response()
+        response.status_code = 200
+        response.data = b'Hello World'
+        return response
+
 
 @pytest.fixture
 def wheel_dict():
@@ -34,9 +54,7 @@ def wheel_dict():
 
 @pytest.fixture
 def client(request):
-    test_client = app.test_client()
-
-    return test_client
+    return TestClient()
 
 
 def test_hello_world(client):
