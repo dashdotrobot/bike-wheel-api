@@ -101,8 +101,6 @@ def test_deformation_single(client, wheel_dict):
 
     response = client.post('/calculate', json=post)
 
-    print(response.json)
-
     assert response.status_code == 200
     assert response.json['deformation']['success'] == True
     assert np.allclose(response.json['deformation']['def_rad'][0],
