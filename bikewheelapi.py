@@ -34,7 +34,7 @@ def calculate(event, context):
         if 'mass' in request:
             response['mass'] = solve_mass(wheel, request['mass'])
 
-    except:
+    except Exception as e:
         status_code = 200
         response = {'success': False, 'error': 'Missing or invalid wheel parameters'}
 
@@ -229,7 +229,7 @@ def F_ext_from_json(json, mode_matrix):
     'Calculate modal force vector from JSON'
 
     # Start with empty force vector
-    F_ext = mode_matrix.F_ext(f_theta=0., f=[0., 0., 0., 0.])
+    F_ext = mode_matrix.F_ext(theta=0., f=[0., 0., 0., 0.])
 
     for f in json:
         if 'magnitude' in f:
@@ -243,7 +243,7 @@ def F_ext_from_json(json, mode_matrix):
 
             mag = np.array([fc['f_lat'], fc['f_rad'], fc['f_tan'], fc['m_tor']])
 
-        F_ext = F_ext + mode_matrix.F_ext(f_theta=f['location'], f=mag)
+        F_ext = F_ext + mode_matrix.F_ext(theta=f['location'], f=mag)
 
     return F_ext
 
