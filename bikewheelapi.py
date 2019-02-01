@@ -1,6 +1,8 @@
 import json
+import numpy as np
 from bikewheelcalc import *
 from numpy.linalg import LinAlgError
+
 
 # --------------------------------- ROUTES --------------------------------- #
 # Define application endpoints                                               #
@@ -62,7 +64,107 @@ def return_response(status_code, response):
 
 
 # --------------------------------- HELPERS -------------------------------- #
-# Define functions to calculate wheel results                                #
+# Define functions to build wheel objects                                    #
+# -------------------------------------------------------------------------- #
+
+def F_ext_from_json(json, mode_matrix):
+    'Calculate modal force vector from JSON'
+
+    # Start with empty force vector
+    F_ext = mode_matrix.F_ext(theta=0., f=[0., 0., 0., 0.])
+
+    for f in json:
+        if 'magnitude' in f:
+
+            mag = np.array(f['magnitude'])
+            if len(mag) < 4:
+                mag = np.pad(mag, (0, 4 - len(mag)))
+        else:
+            fc = {'f_rad': 0., 'f_lat': 0., 'f_tan': 0., 'm_tor': 0.}
+            fc.update(f)
+
+            mag = np.array([fc['f_lat'], fc['f_rad'], fc['f_tan'], fc['m_tor']])
+
+        F_ext = F_ext + mode_matrix.F_ext(theta=f['location'], f=mag)
+
+    return F_ext
+
+def wheel_from_json(json):
+    'Create a BicycleWheel object from JSON'
+
+    w = BicycleWheel()
+
+    # Hub
+    if 'diameter_ds' in json['hub'] and 'diameter_nds' in json['hub']:
+        w.hub = Hub(diameter_ds=float(json['hub']['diameter_ds']),
+                    diameter_nds=float(json['hub']['diameter_nds']),
+                    width_nds=float(json['hub']['width_nds']),
+                    width_ds=float(json['hub']['width_ds']))
+    elif 'diameter' in json['hub']:
+        w.hub = Hub(diameter=float(json['hub']['diameter']),
+                    width_nds=float(json['hub']['width_nds']),
+                    width_ds=float(json['hub']['width_ds']))
+    else:
+        raise KeyError('Missing or invalid rim definition in POST JSON')
+
+    # Rim
+    if 'rim' in json:
+
+        if json['rim']['section_type'] == 'general':
+            area = float(json['rim']['section_params']['area'])
+            I_rad = float(json['rim']['section_params']['I_rad'])
+            I_lat = float(json['rim']['section_params']['I_lat'])
+            J_tor = float(json['rim']['section_params']['J_tor'])
+            I_warp = float(json['rim']['section_params'].get('I_warp', 0.))
+        else:
+            raise TypeError("Invalid rim section type '{:s}'"
+                            .format(json['rim']['section_type']))
+
+        w.rim = Rim(radius=float(json['rim']['radius']), area=area,
+                    I_rad=I_rad, I_lat=I_lat, J_tor=J_tor, I_warp=I_warp,
+                    young_mod=float(json['rim']['young_mod']),
+                    shear_mod=float(json['rim']['shear_mod']),
+                    density=float(json['rim'].get('density', 0.)))
+
+    else:
+        raise KeyError('Missing or invalid rim definition in POST JSON')
+
+    # Spokes
+    if 'spokes' in json:
+        w.lace_cross(n_spokes=int(json['spokes']['num']),
+                     n_cross=int(json['spokes']['num_cross']),
+                     diameter=float(json['spokes']['diameter']),
+                     young_mod=float(json['spokes']['young_mod']),
+                     density=float(json['spokes'].get('density', 0.)),
+                     offset=float(json['spokes'].get('offset', 0.)))
+
+        w.apply_tension(T_right=float(json['spokes'].get('tension', 0.)))
+
+    elif 'spokes_ds' in json and 'spokes_nds' in json:
+        w.lace_cross_ds(n_spokes=int(json['spokes_ds']['num']),
+                        n_cross=int(json['spokes_ds']['num_cross']),
+                        diameter=float(json['spokes_ds']['diameter']),
+                        young_mod=float(json['spokes_ds']['young_mod']),
+                        density=float(json['spokes_ds'].get('density', 0.)),
+                        offset=float(json['spokes_ds'].get('offset', 0.)))
+
+        w.lace_cross_nds(n_spokes=int(json['spokes_nds']['num']),
+                         n_cross=int(json['spokes_nds']['num_cross']),
+                         diameter=float(json['spokes_nds']['diameter']),
+                         young_mod=float(json['spokes_nds']['young_mod']),
+                         density=float(json['spokes_nds'].get('density', 0.)),
+                         offset=float(json['spokes_nds'].get('offset', 0.)))
+
+        w.apply_tension(T_right=float(json['spokes_ds'].get('tension', 0.)))
+
+    else:
+        raise KeyError('Missing or invalid spokes definition in POST JSON')
+
+    return w
+
+
+# --------------------------------- SOLVERS -------------------------------- #
+# Define handlers to fulfill calculation requests                            #
 # -------------------------------------------------------------------------- #
 
 def solve_tensions(wheel, json):
@@ -236,98 +338,3 @@ def solve_mass(wheel, json):
         'inertia_rim': rot_rim,
         'inertia_spokes': rot - rot_rim,
     }
-
-def F_ext_from_json(json, mode_matrix):
-    'Calculate modal force vector from JSON'
-
-    # Start with empty force vector
-    F_ext = mode_matrix.F_ext(theta=0., f=[0., 0., 0., 0.])
-
-    for f in json:
-        if 'magnitude' in f:
-
-            mag = np.array(f['magnitude'])
-            if len(mag) < 4:
-                mag = np.pad(mag, (0, 4 - len(mag)))
-        else:
-            fc = {'f_rad': 0., 'f_lat': 0., 'f_tan': 0., 'm_tor': 0.}
-            fc.update(f)
-
-            mag = np.array([fc['f_lat'], fc['f_rad'], fc['f_tan'], fc['m_tor']])
-
-        F_ext = F_ext + mode_matrix.F_ext(theta=f['location'], f=mag)
-
-    return F_ext
-
-def wheel_from_json(json):
-    'Create a BicycleWheel object from JSON'
-
-    w = BicycleWheel()
-
-    # Hub
-    if 'diameter_ds' in json['hub'] and 'diameter_nds' in json['hub']:
-        w.hub = Hub(diameter_ds=float(json['hub']['diameter_ds']),
-                    diameter_nds=float(json['hub']['diameter_nds']),
-                    width_nds=float(json['hub']['width_nds']),
-                    width_ds=float(json['hub']['width_ds']))
-    elif 'diameter' in json['hub']:
-        w.hub = Hub(diameter=float(json['hub']['diameter']),
-                    width_nds=float(json['hub']['width_nds']),
-                    width_ds=float(json['hub']['width_ds']))
-    else:
-        raise KeyError('Missing or invalid rim definition in POST JSON')
-
-    # Rim
-    if 'rim' in json:
-
-        if json['rim']['section_type'] == 'general':
-            area = float(json['rim']['section_params']['area'])
-            I_rad = float(json['rim']['section_params']['I_rad'])
-            I_lat = float(json['rim']['section_params']['I_lat'])
-            J_tor = float(json['rim']['section_params']['J_tor'])
-            I_warp = float(json['rim']['section_params'].get('I_warp', 0.))
-        else:
-            raise TypeError("Invalid rim section type '{:s}'"
-                            .format(json['rim']['section_type']))
-
-        w.rim = Rim(radius=float(json['rim']['radius']), area=area,
-                    I_rad=I_rad, I_lat=I_lat, J_tor=J_tor, I_warp=I_warp,
-                    young_mod=float(json['rim']['young_mod']),
-                    shear_mod=float(json['rim']['shear_mod']),
-                    density=float(json['rim'].get('density', 0.)))
-
-    else:
-        raise KeyError('Missing or invalid rim definition in POST JSON')
-
-    # Spokes
-    if 'spokes' in json:
-        w.lace_cross(n_spokes=int(json['spokes']['num']),
-                     n_cross=int(json['spokes']['num_cross']),
-                     diameter=float(json['spokes']['diameter']),
-                     young_mod=float(json['spokes']['young_mod']),
-                     density=float(json['spokes'].get('density', 0.)),
-                     offset=float(json['spokes'].get('offset', 0.)))
-
-        w.apply_tension(T_right=float(json['spokes'].get('tension', 0.)))
-
-    elif 'spokes_ds' in json and 'spokes_nds' in json:
-        w.lace_cross_ds(n_spokes=int(json['spokes_ds']['num']),
-                        n_cross=int(json['spokes_ds']['num_cross']),
-                        diameter=float(json['spokes_ds']['diameter']),
-                        young_mod=float(json['spokes_ds']['young_mod']),
-                        density=float(json['spokes_ds'].get('density', 0.)),
-                        offset=float(json['spokes_ds'].get('offset', 0.)))
-
-        w.lace_cross_nds(n_spokes=int(json['spokes_nds']['num']),
-                         n_cross=int(json['spokes_nds']['num_cross']),
-                         diameter=float(json['spokes_nds']['diameter']),
-                         young_mod=float(json['spokes_nds']['young_mod']),
-                         density=float(json['spokes_nds'].get('density', 0.)),
-                         offset=float(json['spokes_nds'].get('offset', 0.)))
-
-        w.apply_tension(T_right=float(json['spokes_ds'].get('tension', 0.)))
-
-    else:
-        raise KeyError('Missing or invalid spokes definition in POST JSON')
-
-    return w
