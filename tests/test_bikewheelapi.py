@@ -2,7 +2,6 @@ import pytest
 from json import dumps, loads
 import numpy as np
 from bikewheelapi import calculate
-import matplotlib.pyplot as plt
 
 
 class Response:
