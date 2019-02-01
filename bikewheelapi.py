@@ -9,16 +9,25 @@ from numpy.linalg import LinAlgError
 def calculate(event, context):
     'Perform the calculations requested in the JSON POST object'
 
-    request = json.loads(event['body'])
+    status_code = 200
     response = {}
+
+    # Parse request JSON
+    try:
+        request = json.loads(event['body'])
+    except Exception as e:
+        response = {'success': False, 'error': 'Unable to parse request JSON'}
+        return return_response(200, response)
 
     # Build the wheel
     try:
-        status_code = 200
-        
         wheel = wheel_from_json(request['wheel'])
         response['wheel'] = request['wheel']
+    except Exception as e:
+        response = {'success': False, 'error': str(e)}
+        return return_response(200, response)
 
+    try:
         if 'tension' in request:
             response['tension'] = solve_tensions(wheel, request['tension'])
 
@@ -34,9 +43,12 @@ def calculate(event, context):
         if 'mass' in request:
             response['mass'] = solve_mass(wheel, request['mass'])
 
-    except Exception as e:
-        status_code = 200
-        response = {'success': False, 'error': 'Missing or invalid wheel parameters'}
+    except:
+        response = {'success': False, 'error': 'Unknown error'}
+
+    return return_response(200, response)
+
+def return_response(status_code, response):
 
     return {
         'statusCode': status_code,
