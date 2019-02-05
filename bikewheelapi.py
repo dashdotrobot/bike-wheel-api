@@ -190,16 +190,16 @@ def solve_tensions(wheel, json):
 
     # Which spokes to return results for
     if 'spokes_range' in json:
-        if len(json['spoke_range']) == 2:
-            spokes_range = (json['spoke_range'][0],
-                            json['spoke_range'][1],
+        if len(json['spokes_range']) == 2:
+            spokes_range = (json['spokes_range'][0],
+                            json['spokes_range'][1],
                             1)
         else:
-            spokes_range = json['spoke_range']
+            spokes_range = json['spokes_range']
 
-        spokes = list(range(int(theta_range[0]),
-                            int(theta_range[1]),
-                            int(theta_range[2])))
+        spokes = list(range(int(spokes_range[0]),
+                            int(spokes_range[1]),
+                            int(spokes_range[2])))
 
     elif 'spokes' in json:
         spokes = np.atleast_1d(np.array(json['spokes'])).tolist()

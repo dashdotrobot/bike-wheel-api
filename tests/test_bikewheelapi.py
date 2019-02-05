@@ -152,6 +152,22 @@ def test_tensions_all_spokes(client, wheel_dict):
     assert len(response.json['tension']['tension']) == 36
     assert len(response.json['tension']['tension_change']) == 36
 
+def test_tension_range(client, wheel_dict):
+    'Get tension for a defined range of spokes'
+
+    post = dict(wheel_dict)
+    post['tension'] = {
+        'forces': [{'location': 0., 'magnitude': [0., 1., 0., 0.]}],
+        'spokes_range': [2, 11, 2]  # every other spoke, 2-10
+    }
+
+    response = client.post('/calculate', json=post)
+
+    assert response.status_code == 200
+    assert response.json['tension']['success'] == True
+    assert len(response.json['tension']['tension']) == 5
+    assert len(response.json['tension']['tension_change']) == 5
+
 def test_Tc_default(client, wheel_dict):
     'Calculate buckling tension and mode with (default) linear approximation'
 
