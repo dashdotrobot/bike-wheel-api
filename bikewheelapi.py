@@ -201,10 +201,7 @@ def solve_tensions(wheel, json):
         spokes = list(range(len(wheel.spokes)))  # Default: all spokes
 
     # Calculate spoke tensions
-    dT = [-wheel.spokes[s].EA/wheel.spokes[s].length *
-          np.dot(wheel.spokes[s].n,
-                 mm.B_theta(wheel.spokes[s].rim_pt[1], comps=[0, 1, 2]).dot(dm))
-          for s in spokes]
+    dT = mm.spoke_tension_change(dm)[spokes].tolist()
 
     tension = [wheel.spokes[s].tension + dt for s, dt in zip(spokes, dT)]
     tension_0 = [wheel.spokes[s].tension for s in spokes]
