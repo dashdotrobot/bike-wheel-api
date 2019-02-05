@@ -79,6 +79,8 @@ The `spokes`, `spokes_ds`, or `spokes_nds` objects have the following identical 
 }
 ```
 
+If `spokes` is specified, then `spokes->num` is the total number of spokes in the wheel. If `spokes_ds` and `spokes_nds` are specified, `spokes_(ds|nds)->num` is the number of spokes on that side only.
+
 ### Calculating spoke tensions
 
 Include the `tension` request object to calculate the new spoke tensions in a wheel subject to external forces. The request has the following form:
