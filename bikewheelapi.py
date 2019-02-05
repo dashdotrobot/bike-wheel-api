@@ -94,18 +94,12 @@ def wheel_from_json(json):
 
     w = BicycleWheel()
 
-    # Hub
-    if 'diameter_ds' in json['hub'] and 'diameter_nds' in json['hub']:
-        w.hub = Hub(diameter_ds=float(json['hub']['diameter_ds']),
-                    diameter_nds=float(json['hub']['diameter_nds']),
-                    width_nds=float(json['hub']['width_nds']),
-                    width_ds=float(json['hub']['width_ds']))
-    elif 'diameter' in json['hub']:
-        w.hub = Hub(diameter=float(json['hub']['diameter']),
-                    width_nds=float(json['hub']['width_nds']),
-                    width_ds=float(json['hub']['width_ds']))
-    else:
-        raise KeyError('Missing or invalid rim definition in POST JSON')
+    # Create hub
+    hub_params = {'diameter': None, 'diameter_ds': None, 'diameter_nds': None,
+                  'width': None, 'width_ds': None, 'width_nds': None}
+    hub_params.update((k, v) for k, v in json['hub'].items() if k in hub_params)
+
+    w.hub = Hub(**hub_params)
 
     # Rim
     if 'rim' in json:

@@ -225,3 +225,5 @@ def test_hub_diff_flanges(client, wheel_dict):
     assert response.status_code == 200
     assert response.json['wheel']['hub']['diameter_ds'] == 0.05
     assert response.json['wheel']['hub']['diameter_nds'] == 0.04
+    assert response.json['wheel']['hub']['width_ds'] == 0.02
+    assert response.json['wheel']['hub']['width_nds'] == 0.03
