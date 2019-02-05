@@ -89,6 +89,17 @@ def F_ext_from_json(json, mode_matrix):
 
     return F_ext
 
+def a_adj_from_json(json):
+    'Create vector of spoke adjustments'
+
+    # Check to see if list items are numeric
+    if isinstance(json[0], float):
+        pass
+    elif 'spoke' in json[0] and 'adjustment' in json[0]:
+        pass
+    else:
+        raise KeyError('Error parsing spoke_adjustments')
+
 def wheel_from_json(json):
     'Create a BicycleWheel object from JSON'
 
@@ -163,14 +174,25 @@ def wheel_from_json(json):
 
 def solve_tensions(wheel, json):
     'Calculate spoke tensions under the specified loads'
+
+    warnings = []
     
     # Mode matrix model
     mm = ModeMatrix(wheel, N=24)
 
-    if 'forces' in json:
+    # External forces
+    F_ext = mm.F_ext(theta=0., f=[0., 0., 0., 0.])
+    try:
         F_ext = F_ext_from_json(json['forces'], mm)
-    else:
-        return {'success': False, 'error': 'Missing or invalid forces object'}
+    except:
+        warnings.append('Missing or invalid forces object')
+
+    # Spoke adjustments
+    a_adj = np.zeros(len(wheel.spokes))
+    try:
+        a_adj = a_adj_from_json(json['spoke_adjustments'])
+    except:
+        warnings.append('Missing or invalid spoke adjustments object')
 
     # Build stiffness matrix
     K = (mm.K_rim(tension=True, r0=True) +

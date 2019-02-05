@@ -168,6 +168,11 @@ def test_tension_range(client, wheel_dict):
     assert len(response.json['tension']['tension']) == 5
     assert len(response.json['tension']['tension_change']) == 5
 
+def test_tension_adjustment_single(client, wheel_dict):
+    'Get tension influence function for a single adjustment'
+
+    assert False
+
 def test_Tc_default(client, wheel_dict):
     'Calculate buckling tension and mode with (default) linear approximation'
 
