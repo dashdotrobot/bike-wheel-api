@@ -187,7 +187,7 @@ def solve_tensions(wheel, json):
     'Calculate spoke tensions under the specified loads'
 
     warnings = []
-    
+
     # Mode matrix model
     mm = ModeMatrix(wheel, N=24)
 
@@ -251,13 +251,24 @@ def solve_tensions(wheel, json):
 def solve_deformation(wheel, json):
     'Calculate the deformation of the wheel under the specified loads'
 
+    warnings = []
+
     # Mode matrix model
     mm = ModeMatrix(wheel, N=24)
 
-    if 'forces' in json:
+    # External forces
+    F_ext = mm.F_ext(theta=0., f=[0., 0., 0., 0.])
+    try:
         F_ext = F_ext_from_json(json['forces'], mm)
-    else:
-        return {'success': False, 'error': 'Missing or invalid forces object'}
+    except:
+        warnings.append('Missing or invalid forces object')
+
+    # Spoke adjustments
+    a_adj = np.zeros(len(wheel.spokes))
+    try:
+        a_adj = a_adj_from_json(json['spoke_adjustments'], wheel)
+    except Exception as e:
+        warnings.append('Missing or invalid spoke adjustments object')
 
     # Build stiffness matrix
     K = (mm.K_rim(tension=True, r0=True) +
@@ -265,7 +276,7 @@ def solve_deformation(wheel, json):
 
     # Solve for modal deformation vector
     try:
-        dm = np.linalg.solve(K, F_ext)
+        dm = np.linalg.solve(K, F_ext + mm.A_adj().dot(a_adj))
     except Exception as e:
         return {'success': False, 'error': 'Linear algebra error'}
 
@@ -293,6 +304,7 @@ def solve_deformation(wheel, json):
 
     return {
         'success': True,
+        'warnings': warnings,
         'theta': theta.tolist(),
         'def_lat': Bu.dot(dm).tolist(),
         'def_rad': Bv.dot(dm).tolist(),
