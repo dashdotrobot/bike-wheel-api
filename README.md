@@ -87,10 +87,17 @@ Include the `tension` request object to calculate the new spoke tensions in a wh
 
 ```
 tension: {
-  forces: [                                                    # Required: List of force objects
+  forces: [                                                    # Optional: List of force objects
     {location: <radians>, f_rad: <N>}                          # A single radial force
     {location: <radians>, f_lat: <N>, f_tan: <N>}              # OR use any combination of f_lat, f_rad, f_tan, and m_tor
     {location: <radians>, magnitude: [<N>, <N>, <N>, <N-m>]}   # OR specify a force vector (plus torque)
+    ...
+  ],
+  spoke_adjustments: [                        # Optional: List of spoke adjustments
+    <m>, <m>, <m>, <m>, ...                   # Either a list of spoke adjustments (in meters)
+                                              # OR
+    {spoke: <integer>, adjustment: <m>},      # List of spoke adjustment objects
+    {spoke: <integer>, adjustment: <m>},
     ...
   ],
   spokes: [<list of spoke indices, starting at 0>]  # Optional: List of spokes to calculate results for
@@ -127,6 +134,29 @@ defines a radial force of 50 Newtons and a lateral force of -10 Newtons, both ap
 
 defines a lateral force of 10 Newtons and a radial force of 5 Newtons, both applied at 3.1415 radians (the "top" of the wheel).
 
+#### The `spoke_adjustments` list
+
+Spoke adjustments may be specified either as a numeric list of spoke length adjustments (the list must have a length equal to the number of spokes):
+
+```
+[<adjustment to spoke 0>, <adjustment to spoke 1>, ... <adjustment to spoke n_s>]
+```
+
+__OR__ as a list of adjustments to selected spokes:
+
+```
+[
+  {spoke: <integer>, adjustment: <m>},  # First spoke to be adjusted
+  {spoke: <integer>, adjustment: <m>},  # Second spoke to be adjusted
+  ...
+  {spoke: <integer>, adjustment: <m>}   # Specify as many spokes as desired (up to max. n_s)
+]
+```
+
+These formats may not be mixed.
+
+The spoke adjustment specifies the length change due to the adjustment ONLY, e.g. a full turn on a standard spoke nipple (56 threads per inch) is equal to 0.0254/56 meters. Positive adjustment means the spoke gets tighter (shorter).
+
 #### The `spokes` or `spokes_range` object
 
 Optionally specify certain spokes to calculate results for. If both `spokes` and `spokes_range` are omitted, the default is all spokes. The `spokes` object defines a list of spoke indices, in any order. The index of the first spoke is 0. The `spokes_range` object defines a range of spokes with a <start> index, <stop> index, and <step>. The <stop> index is omitted. E.g.,
@@ -144,6 +174,7 @@ Include the `deformation` request object to calculate the distortion of the rim 
 ```
 deformation: {
   forces: [...]                             # Same format as in the tension request object
+  spoke_adjustments: [...]                  # Same format as in the tension request object
   theta: [<radians>...]                     # Optional: List of angular positions at which to calculate the deformation
   theta_range: [<start>, <stop>, <number>]  # Optional: Range of angular positions
 }
