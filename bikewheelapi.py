@@ -89,16 +89,27 @@ def F_ext_from_json(json, mode_matrix):
 
     return F_ext
 
-def a_adj_from_json(json):
+def a_adj_from_json(json, wheel):
     'Create vector of spoke adjustments'
 
+    # Check that json is a list
+    if not (hasattr(json, "__iter__") or hasattr(json, "__getitem__")):
+        raise ValueError('spoke_adjustments must be either a numeric vector or a list of {spoke: [s], adjustment: [f]} objects')
+
     # Check to see if list items are numeric
-    if isinstance(json[0], float):
-        pass
-    elif 'spoke' in json[0] and 'adjustment' in json[0]:
-        pass
+    if all([isinstance(a, float) for a in json]):
+        if len(json) == len(wheel.spokes):
+            return np.array(json)
+        else:
+            raise ValueError('Length of spoke_adjustments array must be equal to number of spokes')
     else:
-        raise KeyError('Error parsing spoke_adjustments')
+        a = np.zeros(len(wheel.spokes))
+        for j in json:
+            try:
+                a[int(j['spoke'])] = float(j['adjustment'])
+            except Exception as e:
+                raise ValueError('Error parsing spoke_adjustments')
+        return a
 
 def wheel_from_json(json):
     'Create a BicycleWheel object from JSON'
@@ -190,8 +201,8 @@ def solve_tensions(wheel, json):
     # Spoke adjustments
     a_adj = np.zeros(len(wheel.spokes))
     try:
-        a_adj = a_adj_from_json(json['spoke_adjustments'])
-    except:
+        a_adj = a_adj_from_json(json['spoke_adjustments'], wheel)
+    except Exception as e:
         warnings.append('Missing or invalid spoke adjustments object')
 
     # Build stiffness matrix
@@ -200,7 +211,7 @@ def solve_tensions(wheel, json):
 
     # Solve for modal deformation vector
     try:
-        dm = np.linalg.solve(K, F_ext)
+        dm = np.linalg.solve(K, F_ext + mm.A_adj().dot(a_adj))
     except Exception as e:
         return {'success': False, 'error': 'Linear algebra error'}
 
@@ -223,13 +234,14 @@ def solve_tensions(wheel, json):
         spokes = list(range(len(wheel.spokes)))  # Default: all spokes
 
     # Calculate spoke tensions
-    dT = mm.spoke_tension_change(dm)[spokes].tolist()
+    dT = mm.spoke_tension_change(dm=dm, a=a_adj)[spokes].tolist()
 
     tension = [wheel.spokes[s].tension + dt for s, dt in zip(spokes, dT)]
     tension_0 = [wheel.spokes[s].tension for s in spokes]
 
     return {
         'success': True,
+        'warnings': warnings,
         'spokes': spokes,
         'tension': tension,
         'tension_initial': tension_0,

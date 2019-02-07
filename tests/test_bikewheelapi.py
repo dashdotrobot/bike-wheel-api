@@ -171,7 +171,55 @@ def test_tension_range(client, wheel_dict):
 def test_tension_adjustment_single(client, wheel_dict):
     'Get tension influence function for a single adjustment'
 
-    assert False
+    post = dict(wheel_dict)
+    post['tension'] = {
+        'spoke_adjustments': [{'spoke': 0, 'adjustment': 0.001}]
+    }
+
+    response = client.post('/calculate', json=post)
+
+    assert response.status_code == 200
+    assert response.json['tension']['success'] == True
+    assert np.allclose(response.json['tension']['tension_change'][0], 771.8033786298678)
+
+def test_tension_adjustment_single_symm(client, wheel_dict):
+    'Check that influence function is identical for symmetry-invariant spokes'
+
+    post_1 = dict(wheel_dict)
+    post_1['tension'] = {
+        'spoke_adjustments': [{'spoke': 0, 'adjustment': 0.001}]
+    }
+
+    response_1 = client.post('/calculate', json=post_1)
+    dT_1 = response_1.json['tension']['tension_change']
+
+    post_2 = dict(wheel_dict)
+    post_2['tension'] = {
+        'spoke_adjustments': [{'spoke': 4, 'adjustment': 0.001}]
+    }
+
+    response_2 = client.post('/calculate', json=post_2)
+    dT_2 = response_2.json['tension']['tension_change']
+
+    assert np.allclose(dT_1, np.roll(dT_2, -4))
+
+def test_tension_adjustment_all(client, wheel_dict):
+    'Get tension influence function for a single adjustment'
+
+    a = [0.001]*36
+    post = dict(wheel_dict)
+    post['tension'] = {
+        'spoke_adjustments': a
+    }
+
+    response = client.post('/calculate', json=post)
+
+    assert response.status_code == 200
+    assert response.json['tension']['success'] == True
+
+    # Similar tensions
+    dT = response.json['tension']['tension_change']
+    assert np.all(np.abs(dT - np.mean(dT))/np.mean(dT) < 0.01)
 
 def test_Tc_default(client, wheel_dict):
     'Calculate buckling tension and mode with (default) linear approximation'
