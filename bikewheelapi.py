@@ -26,7 +26,7 @@ def calculate(event, context):
         wheel = wheel_from_json(request['wheel'])
         response['wheel'] = request['wheel']
     except Exception as e:
-        response = {'success': False, 'error': str(e)}
+        response = {'success': False, 'error': 'Error parsing wheel parameters'}
         return return_response(200, response)
 
     try:
