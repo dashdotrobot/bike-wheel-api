@@ -1,6 +1,6 @@
 # Bike Wheel Calc API
 
-RESTful service written in Python/Flask for calculating mechanical properties of bicycle wheels, and simulating deformation and spoke tensions under external loads.
+RESTful service written in Python for calculating mechanical properties of bicycle wheels, and simulating deformation and spoke tensions under external loads. Built for AWS Lambda. Based on the [bike-wheel-calc](https://github.com/dashdotrobot/bike-wheel-calc) open-source bicycle wheel structural simulation library.
 
 Used by [bicyclewheel.info](http://www.bicyclewheel.info), an interactive bicycle wheel simulator ([GitHub repository](https://github.com/dashdotrobot/bicyclewheel)).
 
