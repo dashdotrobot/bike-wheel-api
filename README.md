@@ -2,6 +2,8 @@
 
 RESTful service written in Python/Flask for calculating mechanical properties of bicycle wheels, and simulating deformation and spoke tensions under external loads.
 
+Used by [bicyclewheel.info](http://www.bicyclewheel.info), an interactive bicycle wheel simulator ([GitHub repository](https://github.com/dashdotrobot/bicyclewheel)).
+
 ## Usage
 
 The server accepts a single JSON object using the POST method. The request object must contain a `wheel` object, and any combination of optional calculation requests. The request object has the following format:
